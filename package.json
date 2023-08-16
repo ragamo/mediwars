@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "rollup --config rollup.config.prod.mjs",
-    "dev": "rollup --config rollup.config.dev.mjs --watch"
+    "dev": "rollup --config rollup.config.dev.mjs --watch",
+    "zip": "cd dist && zip -9r dist.zip ."
   },
   "repository": {
     "type": "git",
@@ -17,11 +18,15 @@
   },
   "homepage": "https://github.com/ragamo/mediwars#readme",
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.4",
+    "@rollup/plugin-node-resolve": "^15.1.0",
     "@rollup/plugin-terser": "^0.4.3",
-    "http-server": "^14.1.1",
     "rollup": "^3.28.0",
     "rollup-plugin-copy": "^3.4.0",
     "rollup-plugin-livereload": "^2.0.5",
     "rollup-plugin-serve": "^2.0.2"
+  },
+  "dependencies": {
+    "pathfinding": "^0.4.18"
   }
 }

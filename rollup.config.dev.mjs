@@ -1,6 +1,8 @@
 import copy from 'rollup-plugin-copy';
 import serve from 'rollup-plugin-serve'
 import livereload from 'rollup-plugin-livereload'
+import nodeResolve from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
 
 export default {
 	input: 'src/js/main.js',
@@ -11,6 +13,8 @@ export default {
 		},
 	],
 	plugins: [
+		nodeResolve(),
+		commonjs(),
 		serve('.dev'),
 		livereload(),
     copy({
