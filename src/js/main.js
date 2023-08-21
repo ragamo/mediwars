@@ -1,55 +1,31 @@
 import { Game } from "./Game";
-import { GameMap } from "./GameMap";
 import { Unit } from "./Unit";
-// import Grid from 'pathfinding/src/core/Grid';
-// import AStarFinder from 'pathfinding/src/finders/AStarFinder';
-import { astar, Graph } from "./lib/AStar";
+import { WORLD_TILES } from './constants';
 
-const W = 1000;
-const canvas = document.getElementById('canvas');
-canvas.width = canvas.height = W * 2;
-canvas.style.width = canvas.style.height = W;
-canvas.style.border="1px solid red";
+const game = new Game(document.getElementById('canvas'), WORLD_TILES);
 
-/** @type {CanvasRenderingContext2D} */
-const ctx = canvas.getContext('2d');
-ctx.scale(2, 2);
+game.addObstacle(39, 40);
+game.addObstacle(40, 40);
+game.addObstacle(41, 40);
+game.addObstacle(42, 40);
+game.addObstacle(43, 40);
+game.addObstacle(44, 40);
 
-const game = new Game(ctx);
-const gameMap = new GameMap(100);
-game.add(gameMap);
+game.addObstacle(44, 41);
+game.addObstacle(44, 42);
+game.addObstacle(44, 43);
+game.addObstacle(44, 44);
+game.addObstacle(44, 45);
 
-gameMap.addObstacle(0, 2);
-gameMap.addObstacle(1, 2);
-gameMap.addObstacle(2, 2);
-gameMap.addObstacle(3, 2);
-gameMap.addObstacle(4, 2);
-gameMap.addObstacle(5, 2);
-console.log(gameMap.grid);
+game.addObstacle(39, 41);
+game.addObstacle(39, 42);
+game.addObstacle(39, 43);
+game.addObstacle(39, 44);
+game.addObstacle(39, 45);
 
-/* const pfGrid = new Grid(gameMap.grid);
-const finder = new AStarFinder();
-const t0 = performance.now();
-const path = finder.findPath(1, 1, 1, 3, pfGrid);
-const t1 = performance.now();
-console.log('Path', t1 - t0, path); */
-const t0 = performance.now();
-const graph = new Graph(gameMap.grid, { diagonal: true });
-const res = astar.search(graph, graph.getNode(0, 0), graph.getNode(0, 5), {
-  heuristic: astar.heuristics.manhattan,
-});
-const t1 = performance.now();
-console.log('Path', t1 - t0, res);
-
-// Draw path
-ctx.fillStyle = '#FF0000';
-ctx.fillRect(0, 0, 10, 10);
-for (const r of res) {
-  console.log(r);
-  ctx.fillRect(r.x*10, r.y*10, 10, 10);
+for(let i=5; i<30; i++) {
+  const unit = new Unit(i, 10);
+  game.add(unit);
 }
-
-const unit = new Unit(10, 10);
-game.add(unit);
 
 game.loop();
