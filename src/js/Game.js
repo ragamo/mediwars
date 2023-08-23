@@ -1,8 +1,12 @@
-import { TILE_WIDTH, WORLD_TILES, WORLD_WIDTH, WORLD_HEIGHT } from './constants';
+import { TILE_WIDTH, SPRITE_WIDTH, WORLD_WIDTH, WORLD_HEIGHT } from './constants';
 import { perlin2 } from "./lib/Perlin";
+import { Graph } from "./lib/AStar";
 export class Game {
   #entities = [];
   #grid = [];
+  #map = [];
+  #worldCanvas = null;
+  #graph = null;
 
   /**
    * Main game class
@@ -10,30 +14,53 @@ export class Game {
    * @param {number} gridSize
    */
   constructor(canvas, gridSize = 100) {
-    // this.#grid = Array.from(Array(gridSize), () => new Array(gridSize).fill(1));
-
-    const grid = Array.from(Array(gridSize), () => new Array(gridSize).fill(0));
-    const weights = grid.flatMap((xVector, y) => xVector.map((elem, x) => this.#getPerlinValue(x, y)));
-    const min = Math.abs(Math.min(...weights));
-    this.#grid = grid.map((yVector, y) => {
-      return yVector.map((xVector, x) => {
-        const perlinValue = this.#getPerlinValue(x, y) + min;
-        if (perlinValue < 40) return 0;
-        return perlinValue;
-      });
-    });
-
     // Canvas
-    canvas.width = WORLD_WIDTH * 2;
-    canvas.height = WORLD_HEIGHT * 2;
-    canvas.style.width = WORLD_WIDTH;
-    canvas.style.height = WORLD_HEIGHT;
-    canvas.addEventListener('click', this.rendererClickEvent.bind(this));
+    const resize = () => {
+      const width = parseInt(window.innerWidth, 10);
+      const height = parseInt(window.innerHeight, 10);
+      canvas.width = width * 2;
+      canvas.height = height * 2;
+      canvas.style.width = width; // WORLD_WIDTH;
+      canvas.style.height = height; // WORLD_HEIGHT;
 
-    // Renderer
-    const context = canvas.getContext('2d');
-    context.scale(2, 2);
-    this.renderer = context;
+      this.#prepareMap(Math.ceil(width / TILE_WIDTH), Math.ceil(height / TILE_WIDTH));
+
+      this.#worldCanvas = document.createElement('canvas');
+      this.#worldCanvas.width = canvas.width;
+      this.#worldCanvas.height = canvas.height;
+      const worldContext = this.#worldCanvas.getContext('2d');
+      this.#drawWorld(worldContext);
+
+      // Renderer
+      const context = canvas.getContext('2d');
+      context.scale(2, 2);
+      this.renderer = context;
+    }
+    resize();
+    canvas.addEventListener('click', this.rendererClickEvent.bind(this));
+    window.addEventListener('resize', resize);  
+  }
+
+  #prepareMap(gridWidth, gridHeight) {
+    this.#grid = Array.from(Array(gridHeight), () => new Array(gridWidth).fill(1));
+    this.#map = Array.from(Array(gridHeight * TILE_WIDTH), () => new Array(gridWidth * TILE_WIDTH).fill(0));
+
+    const getPerlinValue = (x, y) => (perlin2(x / 40, y / 40) * 100) + 10;  
+
+    for(let y=0; y<this.#map.length; y++) {
+      for (let x=0; x<this.#map[y].length; x++) {
+        const perlinValue = getPerlinValue(x, y);
+        this.#map[y][x] = perlinValue;
+        const gradY = Math.floor(y/TILE_WIDTH);
+        const gradX = Math.floor(x/TILE_WIDTH);
+        if (perlinValue < -40) {
+          this.#grid[gradY][gradX] = 0;
+        }
+        if (perlinValue > 40) {
+          this.#grid[gradY][gradX] = perlinValue;
+        }
+      }
+    }
   }
 
   get grid() {
@@ -49,12 +76,12 @@ export class Game {
    * @param {MouseEvent} e 
    */
   rendererClickEvent(e) {
-    const [x, y] = [Math.floor(e.pageX / TILE_WIDTH), Math.floor(e.pageY / TILE_WIDTH)];
+    const [x, y] = [Math.floor(e.pageX / SPRITE_WIDTH), Math.floor(e.pageY / SPRITE_WIDTH)];
     const targets = this.#findTargetRegion(x, y, this.#entities.length, this.#grid);
-
+    this.#graph = new Graph(this.#grid, { diagonal: false });
     for (const entity of this.#entities) {
       const pos = targets.shift();
-      entity.move(this.#grid, pos[0], pos[1]);
+      entity.move(this.#graph, pos[0], pos[1]);
     }
   }
 
@@ -64,8 +91,8 @@ export class Game {
    */
   loop(timestamp) {
     this.renderer.clearRect(0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight);
-    this.#drawWorld(this.renderer);
-    this.#drawCollisions(this.renderer);
+    this.renderer.drawImage(this.#worldCanvas, 0, 0);
+    // this.#drawCollisions(this.renderer);
     for(const entity of this.#entities) {
       if (entity.step) entity.step(timestamp);
       if (entity.draw) entity.draw(this.renderer);
@@ -77,16 +104,13 @@ export class Game {
     this.#entities.push(entity);
   }
 
-  #getPerlinValue(x, y) {
-    return (perlin2(x / 8, y / 8) * 100) + 10;
-  }
-
   /**
    * Draw world noise
    * @param {CanvasRenderingContext2D} ctx 
    */
   #drawWorld(ctx) {
-    const gridLen = this.#grid.length;
+    const gridHeight = this.#map.length;
+    const gridWidth = this.#map[0].length;
     const color = (value) => {
       if (value <= -60) return '#0b1660';
       if (value > -60 && value <= -50) return '#16247f';
@@ -99,9 +123,9 @@ export class Game {
       if (value > 60 && value <= 70) return '#FFFFFF';
       return '#FFFFFF';
     }
-    for (let y=0; y<gridLen; y++) {
-      for (let x=0; x<gridLen; x++) {
-        ctx.fillStyle = color(this.#getPerlinValue(x, y));
+    for (let y=0; y<gridHeight; y++) {
+      for (let x=0; x<gridWidth; x++) {
+        ctx.fillStyle = color(this.#map[y][x]);
         ctx.fillRect(x*TILE_WIDTH, y*TILE_WIDTH, TILE_WIDTH, TILE_WIDTH);
       }
     }
@@ -112,12 +136,12 @@ export class Game {
    * @param {CanvasRenderingContext2D} ctx 
    */
   #drawCollisions(ctx) {
-    ctx.fillStyle = 'rgba(0,0,0,.35)';
+    ctx.fillStyle = 'rgba(0,0,0,0.8)';
     const gridLen = this.#grid.length;
     for (let y=0; y<gridLen; y++) {
       for (let x=0; x<gridLen; x++) {
         if (this.#grid[y][x] === 0) {
-          ctx.fillRect(x*TILE_WIDTH, y*TILE_WIDTH, TILE_WIDTH, TILE_WIDTH);
+          ctx.fillRect(x*SPRITE_WIDTH, y*SPRITE_WIDTH, SPRITE_WIDTH, SPRITE_WIDTH);
         }
       }
     }

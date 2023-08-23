@@ -1,5 +1,5 @@
 import { TILE_WIDTH } from "./constants";
-import { astar, Graph } from "./lib/AStar";
+import { astar } from "./lib/AStar";
 
 export class Unit {
   #path = [];
@@ -9,8 +9,7 @@ export class Unit {
     this.y = y;
   }
 
-  move(grid, x, y) {
-    const graph = new Graph(grid, { diagonal: false });
+  move(graph, x, y) {
     this.#path = astar.search(graph, graph.getNode(this.x, this.y), graph.getNode(x, y));
   }
 
