@@ -10,8 +10,6 @@ export class Game {
    * @param {number} gridSize
    */
   constructor(canvas, gridSize = 100) {
-    // EventEmitter
-    this.emitter = new EventTarget();
     // this.#grid = Array.from(Array(gridSize), () => new Array(gridSize).fill(1));
 
     const grid = Array.from(Array(gridSize), () => new Array(gridSize).fill(0));
@@ -20,7 +18,7 @@ export class Game {
     this.#grid = grid.map((yVector, y) => {
       return yVector.map((xVector, x) => {
         const perlinValue = this.#getPerlinValue(x, y) + min;
-        if (perlinValue < 20) return 0;
+        if (perlinValue < 40) return 0;
         return perlinValue;
       });
     });
@@ -30,7 +28,6 @@ export class Game {
     canvas.height = WORLD_HEIGHT * 2;
     canvas.style.width = WORLD_WIDTH;
     canvas.style.height = WORLD_HEIGHT;
-    canvas.style.border="1px solid red";
     canvas.addEventListener('click', this.rendererClickEvent.bind(this));
 
     // Renderer
@@ -52,12 +49,13 @@ export class Game {
    * @param {MouseEvent} e 
    */
   rendererClickEvent(e) {
-    this.emitter.dispatchEvent(new CustomEvent('world:click', {
-      detail: {
-        x: Math.floor(e.pageX / TILE_WIDTH) - 1,
-        y: Math.floor(e.pageY / TILE_WIDTH) - 1,
-      },
-    }));
+    const [x, y] = [Math.floor(e.pageX / TILE_WIDTH), Math.floor(e.pageY / TILE_WIDTH)];
+    const targets = this.#findTargetRegion(x, y, this.#entities.length, this.#grid);
+
+    for (const entity of this.#entities) {
+      const pos = targets.shift();
+      entity.move(this.#grid, pos[0], pos[1]);
+    }
   }
 
   /**
@@ -67,7 +65,7 @@ export class Game {
   loop(timestamp) {
     this.renderer.clearRect(0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight);
     this.#drawWorld(this.renderer);
-    // this.#drawCollisions(this.renderer);
+    this.#drawCollisions(this.renderer);
     for(const entity of this.#entities) {
       if (entity.step) entity.step(timestamp);
       if (entity.draw) entity.draw(this.renderer);
@@ -76,14 +74,11 @@ export class Game {
   }
 
   add(entity) {
-    if (entity.setup) {
-      entity.setup(this.#grid, this.emitter);
-    }
     this.#entities.push(entity);
   }
 
   #getPerlinValue(x, y) {
-    return (perlin2(x / 15, y / 15) * 100) + 10;
+    return (perlin2(x / 8, y / 8) * 100) + 10;
   }
 
   /**
@@ -117,7 +112,7 @@ export class Game {
    * @param {CanvasRenderingContext2D} ctx 
    */
   #drawCollisions(ctx) {
-    ctx.fillStyle = '#000000';
+    ctx.fillStyle = 'rgba(0,0,0,.35)';
     const gridLen = this.#grid.length;
     for (let y=0; y<gridLen; y++) {
       for (let x=0; x<gridLen; x++) {
@@ -126,5 +121,42 @@ export class Game {
         }
       }
     }
+  }
+
+  #findTargetRegion(x, y, entitiesLength, grid) {
+    const spiralDirections = [
+      [0, 1],  // right
+      [1, 0],  // down
+      [0, -1], // left
+      [-1, 0]  // up
+    ];
+  
+    let currentRow = y;
+    let currentCol = x;
+    let directionIndex = 0;
+    let stepsCount = 1;
+    let stepsTaken = 0;
+    
+    const selectedNodes = [];
+  
+    while (selectedNodes.length < entitiesLength) {
+      if (currentRow >= 0 && currentCol >= 0 && grid[currentRow][currentCol] > 0) {
+        selectedNodes.push([currentCol, currentRow]);
+      }
+  
+      currentRow += spiralDirections[directionIndex][0];
+      currentCol += spiralDirections[directionIndex][1];
+      stepsTaken++;
+  
+      if (stepsTaken === stepsCount) {
+        stepsTaken = 0;
+        directionIndex = (directionIndex + 1) % 4;
+        if (directionIndex % 2 === 0) {
+          stepsCount++;
+        }
+      }
+    }
+  
+    return selectedNodes;    
   }
 }

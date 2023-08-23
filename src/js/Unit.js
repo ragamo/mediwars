@@ -9,15 +9,9 @@ export class Unit {
     this.y = y;
   }
 
-  /**
-   * 
-   * @param {EventTarget} emitter 
-   */
-  setup(grid, emitter) {
-    emitter.addEventListener('world:click', e => {
-      const graph = new Graph(grid, { diagonal: false });
-      this.#path = astar.search(graph, graph.getNode(this.x, this.y), graph.getNode(e.detail.x, e.detail.y));
-    });
+  move(grid, x, y) {
+    const graph = new Graph(grid, { diagonal: false });
+    this.#path = astar.search(graph, graph.getNode(this.x, this.y), graph.getNode(x, y));
   }
 
   step() {
