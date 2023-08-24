@@ -3,6 +3,7 @@ import { astar } from "./lib/AStar";
 
 export class Unit {
   #path = [];
+  #stepCount = 0;
 
   constructor(x, y) {
     this.x = x;
@@ -17,7 +18,11 @@ export class Unit {
     if (this.#path.length) {
       this.x = this.#path[0].x;
       this.y = this.#path[0].y;
-      this.#path.shift();
+
+      if (this.#stepCount % 6 === 0) {
+        this.#path.shift();
+      }
+      this.#stepCount++;
     }
   }
 

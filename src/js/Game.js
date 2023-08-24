@@ -22,6 +22,7 @@ export class Game {
       canvas.height = height * 2;
       canvas.style.width = width; // WORLD_WIDTH;
       canvas.style.height = height; // WORLD_HEIGHT;
+      canvas.style.cursor = 'crosshair';
 
       this.#prepareMap(Math.ceil(width / TILE_WIDTH), Math.ceil(height / TILE_WIDTH));
 
@@ -37,7 +38,8 @@ export class Game {
       this.renderer = context;
     }
     resize();
-    canvas.addEventListener('click', this.rendererClickEvent.bind(this));
+    canvas.addEventListener('click', this.renderClickEvent.bind(this));
+    canvas.addEventListener('mousemove', this.caputureMousePos.bind(this));
     window.addEventListener('resize', resize);  
   }
 
@@ -63,6 +65,12 @@ export class Game {
     }
   }
 
+  caputureMousePos(e) {
+    const [x, y] = [Math.floor(e.pageX / SPRITE_WIDTH), Math.floor(e.pageY / SPRITE_WIDTH)];
+    this.mouseX = x;
+    this.mouseY = y;
+  }
+
   get grid() {
     return this.#grid;
   }
@@ -75,7 +83,7 @@ export class Game {
    * Handle user click
    * @param {MouseEvent} e 
    */
-  rendererClickEvent(e) {
+  renderClickEvent(e) {
     const [x, y] = [Math.floor(e.pageX / SPRITE_WIDTH), Math.floor(e.pageY / SPRITE_WIDTH)];
     const targets = this.#findTargetRegion(x, y, this.#entities.length, this.#grid);
     this.#graph = new Graph(this.#grid, { diagonal: false });
@@ -83,6 +91,14 @@ export class Game {
       const pos = targets.shift();
       entity.move(this.#graph, pos[0], pos[1]);
     }
+  }
+
+  #drawHover(x, y) {
+    this.renderer.beginPath();
+    this.renderer.ellipse(x * SPRITE_WIDTH + SPRITE_WIDTH / 2, y * SPRITE_WIDTH + SPRITE_WIDTH / 2, SPRITE_WIDTH / 2, SPRITE_WIDTH / 2, 0, 0, 2 * Math.PI);
+    this.renderer.fillStyle = 'rgba(255, 255, 255, .5)';
+    this.renderer.fill();
+    this.renderer.closePath();
   }
 
   /**
@@ -97,6 +113,7 @@ export class Game {
       if (entity.step) entity.step(timestamp);
       if (entity.draw) entity.draw(this.renderer);
     }
+    this.#drawHover(this.mouseX, this.mouseY);
     window.requestAnimationFrame(this.loop.bind(this));
   }
 
