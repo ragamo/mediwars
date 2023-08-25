@@ -3,7 +3,8 @@ import { astar } from "./lib/AStar";
 
 export class Unit {
   #path = [];
-  #stepCount = 0;
+  #stepCount = 1;
+  #shiftEvery = 6;
 
   constructor(x, y) {
     this.x = x;
@@ -11,23 +12,26 @@ export class Unit {
   }
 
   move(graph, x, y) {
-    this.#path = astar.search(graph, graph.getNode(this.x, this.y), graph.getNode(x, y));
+    this.#path = astar.search(graph, graph.getNode(Math.ceil(this.x), Math.ceil(this.y)), graph.getNode(x, y));
   }
 
   step() {
     if (this.#path.length) {
-      this.x = this.#path[0].x;
-      this.y = this.#path[0].y;
+      this.x = this.x + ((this.#path[0].x - this.x) / this.#shiftEvery) * this.#stepCount;
+      this.y = this.y + ((this.#path[0].y - this.y) / this.#shiftEvery) * this.#stepCount;
 
-      if (this.#stepCount % 6 === 0) {
+      this.#stepCount++;
+      if (this.#stepCount % this.#shiftEvery === 0) {
         this.#path.shift();
       }
-      this.#stepCount++;
+      if (this.#stepCount >= this.#shiftEvery) {
+        this.#stepCount = 1;
+      }
     }
   }
 
   /**
-   * Draw on game world
+   * Draw unit
    * @param {CanvasRenderingContext2D} ctx 
    */
   draw(ctx) {

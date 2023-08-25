@@ -98,6 +98,8 @@ export class Game {
     this.renderer.ellipse(x * SPRITE_WIDTH + SPRITE_WIDTH / 2, y * SPRITE_WIDTH + SPRITE_WIDTH / 2, SPRITE_WIDTH / 2, SPRITE_WIDTH / 2, 0, 0, 2 * Math.PI);
     this.renderer.fillStyle = 'rgba(255, 255, 255, .5)';
     this.renderer.fill();
+    this.renderer.strokeStyle = 'rgba(0, 0, 0, .5)';
+    this.renderer.stroke();
     this.renderer.closePath();
   }
 
