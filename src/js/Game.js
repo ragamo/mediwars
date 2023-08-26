@@ -1,6 +1,7 @@
 import { TILE_WIDTH, SPRITE_WIDTH, WORLD_WIDTH, WORLD_HEIGHT } from './constants';
 import { perlin2 } from "./lib/Perlin";
 import { Graph } from "./lib/AStar";
+import { createCanvasContext } from './lib/Canvas';
 export class Game {
   #entities = [];
   #grid = [];
@@ -18,34 +19,31 @@ export class Game {
     const resize = () => {
       const width = parseInt(window.innerWidth, 10);
       const height = parseInt(window.innerHeight, 10);
-      canvas.width = width * 2;
-      canvas.height = height * 2;
-      canvas.style.width = width; // WORLD_WIDTH;
-      canvas.style.height = height; // WORLD_HEIGHT;
+
+      const { context } = createCanvasContext(width, height, canvas);
+      this.renderer = context;
+
+      canvas.style.width = width;
+      canvas.style.height = height;
       canvas.style.cursor = 'crosshair';
 
-      this.#prepareMap(Math.ceil(width / TILE_WIDTH), Math.ceil(height / TILE_WIDTH));
+      this.#prepareMap(width, height);      
 
-      this.#worldCanvas = document.createElement('canvas');
-      this.#worldCanvas.width = canvas.width;
-      this.#worldCanvas.height = canvas.height;
-      const worldContext = this.#worldCanvas.getContext('2d');
+      // Draw cached world
+      const { canvas: worldCanvas, context: worldContext } = createCanvasContext(width, height);
+      this.#worldCanvas = worldCanvas;
       this.#drawWorld(worldContext);
-
-      // Renderer
-      const context = canvas.getContext('2d');
-      context.scale(2, 2);
-      this.renderer = context;
     }
     resize();
-    canvas.addEventListener('click', this.renderClickEvent.bind(this));
+    canvas.addEventListener('click', this.handleClickEvent.bind(this));
     canvas.addEventListener('mousemove', this.caputureMousePos.bind(this));
     window.addEventListener('resize', resize);  
   }
 
-  #prepareMap(gridWidth, gridHeight) {
-    this.#grid = Array.from(Array(gridHeight), () => new Array(gridWidth).fill(1));
-    this.#map = Array.from(Array(gridHeight * TILE_WIDTH), () => new Array(gridWidth * TILE_WIDTH).fill(0));
+  #prepareMap(width, height) {
+    console.log('grid size', Math.ceil(width / SPRITE_WIDTH), Math.ceil(height / SPRITE_WIDTH));
+    this.#grid = Array.from(Array(Math.floor(height / SPRITE_WIDTH)), () => new Array(Math.floor(width / SPRITE_WIDTH)).fill(1));
+    this.#map = Array.from(Array(Math.ceil(height / TILE_WIDTH)), () => new Array(Math.ceil(width / TILE_WIDTH)).fill(0));
 
     const getPerlinValue = (x, y) => (perlin2(x / 40, y / 40) * 100) + 10;  
 
@@ -53,8 +51,8 @@ export class Game {
       for (let x=0; x<this.#map[y].length; x++) {
         const perlinValue = getPerlinValue(x, y);
         this.#map[y][x] = perlinValue;
-        const gradY = Math.floor(y/TILE_WIDTH);
-        const gradX = Math.floor(x/TILE_WIDTH);
+        const gradY = Math.floor(y/SPRITE_WIDTH);
+        const gradX = Math.floor(x/SPRITE_WIDTH);
         if (perlinValue < -40) {
           this.#grid[gradY][gradX] = 0;
         }
@@ -65,12 +63,6 @@ export class Game {
     }
   }
 
-  caputureMousePos(e) {
-    const [x, y] = [Math.floor(e.pageX / SPRITE_WIDTH), Math.floor(e.pageY / SPRITE_WIDTH)];
-    this.mouseX = x;
-    this.mouseY = y;
-  }
-
   get grid() {
     return this.#grid;
   }
@@ -79,11 +71,17 @@ export class Game {
     this.#grid[y][x] = 0;
   }
 
+  caputureMousePos(e) {
+    const [x, y] = [Math.floor(e.pageX / SPRITE_WIDTH), Math.floor(e.pageY / SPRITE_WIDTH)];
+    this.mouseX = x;
+    this.mouseY = y;
+  }
+
   /**
    * Handle user click
    * @param {MouseEvent} e 
    */
-  renderClickEvent(e) {
+  handleClickEvent(e) {
     const [x, y] = [Math.floor(e.pageX / SPRITE_WIDTH), Math.floor(e.pageY / SPRITE_WIDTH)];
     const targets = this.#findTargetRegion(x, y, this.#entities.length, this.#grid);
     this.#graph = new Graph(this.#grid, { diagonal: false });
@@ -93,7 +91,7 @@ export class Game {
     }
   }
 
-  #drawHover(x, y) {
+  #drawCursor(x, y) {
     this.renderer.beginPath();
     this.renderer.ellipse(x * SPRITE_WIDTH + SPRITE_WIDTH / 2, y * SPRITE_WIDTH + SPRITE_WIDTH / 2, SPRITE_WIDTH / 2, SPRITE_WIDTH / 2, 0, 0, 2 * Math.PI);
     this.renderer.fillStyle = 'rgba(255, 255, 255, .5)';
@@ -109,13 +107,13 @@ export class Game {
    */
   loop(timestamp) {
     this.renderer.clearRect(0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight);
-    this.renderer.drawImage(this.#worldCanvas, 0, 0);
+    this.renderer.drawImage(this.#worldCanvas, 0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight);
     // this.#drawCollisions(this.renderer);
     for(const entity of this.#entities) {
       if (entity.step) entity.step(timestamp);
       if (entity.draw) entity.draw(this.renderer);
     }
-    this.#drawHover(this.mouseX, this.mouseY);
+    this.#drawCursor(this.mouseX, this.mouseY);
     window.requestAnimationFrame(this.loop.bind(this));
   }
 
@@ -183,7 +181,7 @@ export class Game {
     const selectedNodes = [];
   
     while (selectedNodes.length < entitiesLength) {
-      if (currentRow >= 0 && currentCol >= 0 && grid[currentRow][currentCol] > 0) {
+      if (currentRow >= 0 && currentCol >= 0 && currentRow < grid.length && currentCol < grid[0].length && grid[currentRow][currentCol] > 0) {
         selectedNodes.push([currentCol, currentRow]);
       }
   

@@ -1,5 +1,6 @@
 import { Unit } from "../Unit";
 import { SPRITE_WIDTH } from "../constants";
+import { createCanvasContext } from '../lib/Canvas';
 
 export class Swordman extends Unit {
   #sprite = {
@@ -70,12 +71,7 @@ export class Swordman extends Unit {
       return;
     }
     
-    const canvas = document.createElement('canvas');
-    canvas.width = SPRITE_WIDTH * 2;
-    canvas.height = SPRITE_WIDTH * 2;
-    const context = canvas.getContext('2d');
-    context.scale(2,2);
-
+    const { canvas, context } = createCanvasContext(SPRITE_WIDTH, SPRITE_WIDTH);
     const len = this.#sprite.idle[state].length;
     for (let y=0; y<len; y++) {
       for (let x=0; x<len; x++) {
