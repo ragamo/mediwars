@@ -1,10 +1,8 @@
 import { Game } from "./Game";
-import { Unit } from "./Unit";
-import { WORLD_TILES } from './constants';
 import { Basic } from "./units/Basic";
 import { Swordman } from "./units/Swordman";
 
-const game = new Game(document.getElementById('canvas'), WORLD_TILES);
+const game = new Game(document.getElementById('canvas'));
 
 /* 
 game.addObstacle(39, 40);
@@ -30,15 +28,15 @@ game.addObstacle(39, 45);
 const basic = new Basic(4, 9);
 game.add(basic);
 
-for(let i=5; i<20; i++) {
+for(let i=5; i<7; i++) {
   for (let j=5; j<7; j++) {
     const unit = new Swordman(i, j);
     game.add(unit);
   }
 }
-for(let i=5; i<20; i++) {
+for(let i=10; i<12; i++) {
   for (let j=7; j<10; j++) {
-    const unit = new Swordman(i, j);
+    const unit = new Swordman(i, j, 'enemy');
     game.add(unit);
   }
 }

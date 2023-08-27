@@ -1,14 +1,27 @@
-import { TILE_WIDTH } from "./constants";
+import { SPRITE_WIDTH } from "./constants";
 import { astar } from "./lib/AStar";
 
+/**
+ * @typedef { 'ally' | 'enemy' } UnitType
+ */
+
 export class Unit {
+  /** @type {UnitType} */
+  type = null;
   #path = [];
   #stepCount = 1;
   #shiftEvery = 6;
 
-  constructor(x, y) {
+  /**
+   * 
+   * @param {number} x initial X position 
+   * @param {number} y initial Y postion
+   * @param {UnitType} type initial unit type
+   */
+  constructor(x, y, type = 'ally') {
     this.x = x;
     this.y = y;
+    this.type = type;
   }
 
   move(graph, x, y) {
@@ -36,6 +49,6 @@ export class Unit {
    */
   draw(ctx) {
     ctx.fillStyle = '#FF0000';
-    ctx.fillRect(this.x * TILE_WIDTH, this.y * TILE_WIDTH, TILE_WIDTH, TILE_WIDTH);
+    ctx.fillRect(this.x * SPRITE_WIDTH, this.y * SPRITE_WIDTH, SPRITE_WIDTH, SPRITE_WIDTH);
   }
 }

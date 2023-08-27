@@ -50,8 +50,8 @@ export class Swordman extends Unit {
     2: '#f7d180',
     3: '#b1b1b1',
     4: '#171717',
-    5: '#d3a061',
-    6: '#99703b',
+    5: this.type === 'ally' ? '#d3a061' : '#bc4e4e',
+    6: this.type === 'ally' ? '#99703b' : '#a43434',
     7: '#f4f4f4',
   }
 

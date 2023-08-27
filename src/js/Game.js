@@ -1,7 +1,8 @@
-import { TILE_WIDTH, SPRITE_WIDTH, WORLD_WIDTH, WORLD_HEIGHT } from './constants';
+import { TILE_WIDTH, SPRITE_WIDTH } from './constants';
 import { perlin2 } from "./lib/Perlin";
 import { Graph } from "./lib/AStar";
 import { createCanvasContext } from './lib/Canvas';
+
 export class Game {
   #entities = [];
   #grid = [];
@@ -14,19 +15,18 @@ export class Game {
    * @param {HTMLCanvasElement} canvas
    * @param {number} gridSize
    */
-  constructor(canvas, gridSize = 100) {
+  constructor(canvas) {
     // Canvas
     const resize = () => {
       const width = parseInt(window.innerWidth, 10);
       const height = parseInt(window.innerHeight, 10);
 
-      const { context } = createCanvasContext(width, height, canvas);
-      this.renderer = context;
-
       canvas.style.width = width;
       canvas.style.height = height;
       canvas.style.cursor = 'crosshair';
 
+      const { context } = createCanvasContext(width, height, canvas);
+      this.renderer = context;
       this.#prepareMap(width, height);      
 
       // Draw cached world
@@ -41,7 +41,6 @@ export class Game {
   }
 
   #prepareMap(width, height) {
-    console.log('grid size', Math.ceil(width / SPRITE_WIDTH), Math.ceil(height / SPRITE_WIDTH));
     this.#grid = Array.from(Array(Math.floor(height / SPRITE_WIDTH)), () => new Array(Math.floor(width / SPRITE_WIDTH)).fill(1));
     this.#map = Array.from(Array(Math.ceil(height / TILE_WIDTH)), () => new Array(Math.ceil(width / TILE_WIDTH)).fill(0));
 
@@ -91,9 +90,10 @@ export class Game {
    * @param {MouseEvent} e 
    */
   handleClickEvent(e) {
-    const targets = this.#findTargetRegion(this.mouseX, this.mouseY, this.#entities.length, this.#grid);
+    const allied = this.#entities.filter((entity) => entity.type === 'ally');
+    const targets = this.#findTargetRegion(this.mouseX, this.mouseY, allied.length, this.#grid);
     this.#graph = new Graph(this.#grid, { diagonal: false });
-    for (const entity of this.#entities) {
+    for (const entity of allied) {
       const pos = targets.shift();
       entity.move(this.#graph, pos[0], pos[1]);
     }
@@ -116,7 +116,7 @@ export class Game {
   loop(timestamp) {
     this.renderer.clearRect(0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight);
     this.renderer.drawImage(this.#worldCanvas, 0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight);
-    this.#drawCollisions(this.renderer);
+    // this.#drawCollisions(this.renderer);
     for(const entity of this.#entities) {
       if (entity.step) entity.step(timestamp);
       if (entity.draw) entity.draw(this.renderer);
@@ -127,6 +127,9 @@ export class Game {
 
   add(entity) {
     this.#entities.push(entity);
+    if (entity.type === 'enemy') {
+      this.#grid[entity.y][entity.x] = 0;
+    }
   }
 
   /**
