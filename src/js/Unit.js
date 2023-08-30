@@ -46,7 +46,8 @@ export class Unit {
    * Frame update
    */
   step() {
-    const enemyHit = this.collideWithEnemy(this.id, Math.round(this.x), Math.round(this.y));
+    // Collisions
+    const enemyHit = this.collideWithEnemy(Math.round(this.x), Math.round(this.y));
     if (enemyHit) {
       enemyHit.stop();
       this.stop();
@@ -102,7 +103,7 @@ export class Unit {
     }
   }
 
-  collideWithEnemy(id, x, y) {
+  collideWithEnemy(x, y) {
     return this.enemies.find((enemy) => {
       const enemyX = Math.round(enemy.x);
       const enemyY = Math.round(enemy.y)

@@ -1,12 +1,16 @@
-import { TILE_WIDTH, SPRITE_WIDTH } from './constants';
+import { TILE_WIDTH, SPRITE_WIDTH, DEBUG } from './constants';
 import { perlin2 } from "./lib/Perlin";
 import { Graph } from "./lib/AStar";
 import { createCanvasContext } from './lib/Canvas';
+import { Unit } from './Unit';
+import { Tree } from './env/Tree';
 
 export class Game {
   #entities = [];
   #grid = [];
   #map = [];
+  #env = [];
+  #envCanvas = null;
   #worldCanvas = null;
   #graph = null;
 
@@ -33,15 +37,22 @@ export class Game {
       const { canvas: worldCanvas, context: worldContext } = createCanvasContext(width, height);
       this.#worldCanvas = worldCanvas;
       this.#drawWorld(worldContext);
+
+
+      const { canvas: envCanvas, context: envContext } = createCanvasContext(width, height);
+      this.#envCanvas = envCanvas;
+      this.#drawEnvironment(envContext);
     }
     resize();
     canvas.addEventListener('click', this.handleClickEvent.bind(this));
     canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
-    window.addEventListener('resize', resize);  
+    window.addEventListener('resize', resize);
+    console.log(this);
   }
 
   #prepareMap(width, height) {
     this.#grid = Array.from(Array(Math.floor(height / SPRITE_WIDTH)), () => new Array(Math.floor(width / SPRITE_WIDTH)).fill(1));
+    this.#env = Array.from(Array(Math.floor(height / SPRITE_WIDTH)), () => new Array(Math.floor(width / SPRITE_WIDTH)).fill(undefined));
     this.#map = Array.from(Array(Math.ceil(height / TILE_WIDTH)), () => new Array(Math.ceil(width / TILE_WIDTH)).fill(0));
 
     const getPerlinValue = (x, y) => (perlin2(x / 40, y / 40) * 100) + 10;  
@@ -56,6 +67,10 @@ export class Game {
         if (gradY < this.#grid.length && gradX < this.#grid[0].length) {
           if (perlinValue < -40) {
             this.#grid[gradY][gradX] = 0;
+          }
+          if(perlinValue <= -15 && perlinValue >= -15.02) {
+            this.#grid[gradY][gradX] = 0;
+            this.#env[gradY][gradX] = new Tree(gradX, gradY);
           }
           if (perlinValue > 40) {
             this.#grid[gradY][gradX] = perlinValue;
@@ -76,12 +91,13 @@ export class Game {
   }
 
   add(entity) {
-    this.#entities.push(entity);
-    /* if (entity.type === 'enemy') {
-      this.#grid[entity.y][entity.x] = 0;
-    } */
-
-    entity.bind(this.#graph, this.#entities);
+    if (entity instanceof Unit) {
+      this.#entities.push(entity);
+      /* if (entity.type === 'enemy') {
+        this.#grid[entity.y][entity.x] = 0;
+      } */
+      entity.bind(this.#graph, this.#entities);
+    }
   }
 
   /**
@@ -94,7 +110,10 @@ export class Game {
     if (y > this.#grid.length - 1) y = this.#grid.length - 1;
     this.mouseX = x;
     this.mouseY = y;
-    document.getElementById('debug').innerHTML = `[${x},${y}]`;
+
+    if (DEBUG) {
+      document.getElementById('debug').innerHTML = `[${x},${y}] (${this.#grid[y][x]}, ${this.#map[y*4][x*4]})`;
+    }
   }
 
   /**
@@ -128,6 +147,7 @@ export class Game {
   loop(timestamp) {
     this.renderer.clearRect(0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight);
     this.renderer.drawImage(this.#worldCanvas, 0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight);
+    this.renderer.drawImage(this.#envCanvas, 0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight);
     this.#drawCollisions(this.renderer);
     for(const entity of this.#entities) {
       if (entity.step) entity.step(timestamp);
@@ -164,12 +184,25 @@ export class Game {
     }
   }
 
+  #drawEnvironment(ctx) {
+    const gridHeight = this.#env.length;
+    const gridWidth = this.#env[0].length;
+    for (let y=0; y<gridHeight; y++) {
+      for (let x=0; x<gridWidth; x++) {
+        if (this.#env[y][x]) {
+          console.log(this.#env[y][x]);
+          this.#env[y][x].draw(ctx)
+        }
+      }
+    }
+  }
+
   /**
    * Draw game collisions
    * @param {CanvasRenderingContext2D} ctx 
    */
   #drawCollisions(ctx) {
-    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
     for (let y=0; y<this.#grid.length; y++) {
       for (let x=0; x<this.#grid[0].length; x++) {
         if (this.#grid[y][x] === 0) {
