@@ -63,6 +63,8 @@ export class Game {
         }
       }
     }
+
+    this.#graph = new Graph(this.#grid, { diagonal: false });
   }
 
   get grid() {
@@ -71,6 +73,15 @@ export class Game {
 
   addObstacle(x, y) {
     this.#grid[y][x] = 0;
+  }
+
+  add(entity) {
+    this.#entities.push(entity);
+    /* if (entity.type === 'enemy') {
+      this.#grid[entity.y][entity.x] = 0;
+    } */
+
+    entity.bind(this.#graph, this.#entities);
   }
 
   /**
@@ -83,6 +94,7 @@ export class Game {
     if (y > this.#grid.length - 1) y = this.#grid.length - 1;
     this.mouseX = x;
     this.mouseY = y;
+    document.getElementById('debug').innerHTML = `[${x},${y}]`;
   }
 
   /**
@@ -90,12 +102,12 @@ export class Game {
    * @param {MouseEvent} e 
    */
   handleClickEvent(e) {
-    const allied = this.#entities.filter((entity) => entity.type === 'ally');
+    const [allied, enemies] = this.#entities.reduce(([a, e], cur) => cur.type === 'ally' ? [[...a, cur], e] : [a, [...e, cur]], [[],[]]);
     const targets = this.#findTargetRegion(this.mouseX, this.mouseY, allied.length, this.#grid);
-    this.#graph = new Graph(this.#grid, { diagonal: false });
+    
     for (const entity of allied) {
-      const pos = targets.shift();
-      entity.move(this.#graph, pos[0], pos[1]);
+      const [x, y] = targets.shift();
+      entity.move(x, y, enemies);
     }
   }
 
@@ -116,20 +128,13 @@ export class Game {
   loop(timestamp) {
     this.renderer.clearRect(0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight);
     this.renderer.drawImage(this.#worldCanvas, 0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight);
-    // this.#drawCollisions(this.renderer);
+    this.#drawCollisions(this.renderer);
     for(const entity of this.#entities) {
       if (entity.step) entity.step(timestamp);
       if (entity.draw) entity.draw(this.renderer);
     }
     this.#drawCursor(this.mouseX, this.mouseY);
     window.requestAnimationFrame(this.loop.bind(this));
-  }
-
-  add(entity) {
-    this.#entities.push(entity);
-    if (entity.type === 'enemy') {
-      this.#grid[entity.y][entity.x] = 0;
-    }
   }
 
   /**

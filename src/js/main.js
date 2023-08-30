@@ -25,10 +25,14 @@ game.addObstacle(39, 44);
 game.addObstacle(39, 45);
 */
 
-const basic = new Basic(4, 9);
+const basic = new Basic(5, 5);
 game.add(basic);
 
-for(let i=5; i<7; i++) {
+const patrol = new Swordman(3, 10, 'enemy');
+patrol.patrol([3, 15], [15, 15], [15, 10]);
+game.add(patrol);
+
+for(let i=3; i<7; i++) {
   for (let j=5; j<7; j++) {
     const unit = new Swordman(i, j);
     game.add(unit);
