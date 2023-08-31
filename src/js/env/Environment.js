@@ -1,10 +1,11 @@
 import { SPRITE_WIDTH } from "../constants";
 import { createCanvasContext } from '../lib/Canvas';
 
+const envCache = {};
+
 export class Environment {
   sprite = [];
   colors = {};
-  cached = null;
 
   constructor(x, y) {
     this.x = x;
@@ -16,8 +17,8 @@ export class Environment {
    * @param {CanvasRenderingContext2D} ctx 
    */
   draw(ctx) {
-    if (this.cached) {
-      ctx.drawImage(this.cached, 0, 0, SPRITE_WIDTH * 2, SPRITE_WIDTH * 2, this.x * SPRITE_WIDTH, this.y * SPRITE_WIDTH, SPRITE_WIDTH, SPRITE_WIDTH);
+    if (envCache[this.#getCachedName()]) {
+      this.#drawCached(ctx);
       return;
     }
     
@@ -30,7 +31,15 @@ export class Environment {
       }
     }
 
-    this.cached = canvas;  
-    ctx.drawImage(this.cached, 0, 0, SPRITE_WIDTH * 2, SPRITE_WIDTH * 2, this.x * SPRITE_WIDTH, this.y * SPRITE_WIDTH, SPRITE_WIDTH, SPRITE_WIDTH);
+    envCache[this.#getCachedName()] = canvas;
+    this.#drawCached(ctx);
+  }
+
+  #getCachedName() {
+    return this.constructor.name + (this.type ?? '');
+  }
+
+  #drawCached(ctx) {
+    ctx.drawImage(envCache[this.#getCachedName()], 0, 0, SPRITE_WIDTH * 2, SPRITE_WIDTH * 2, this.x * SPRITE_WIDTH, this.y * SPRITE_WIDTH, SPRITE_WIDTH, SPRITE_WIDTH);
   }
 }

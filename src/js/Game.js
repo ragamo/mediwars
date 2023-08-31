@@ -56,10 +56,9 @@ export class Game {
 
   #prepareMap(width, height) {
     this.#grid = Array.from(Array(Math.floor(height / SPRITE_WIDTH)), () => new Array(Math.floor(width / SPRITE_WIDTH)).fill(1));
-    this.#env = Array.from(Array(Math.floor(height / SPRITE_WIDTH)), () => new Array(Math.floor(width / SPRITE_WIDTH)).fill(undefined));
     this.#map = Array.from(Array(Math.ceil(height / TILE_WIDTH)), () => new Array(Math.ceil(width / TILE_WIDTH)).fill(0));
 
-    const getPerlinValue = (x, y) => (perlin2(x / 40, y / 40) * 100) + 10;  
+    const getPerlinValue = (x, y) => (perlin2(x / 40, y / 40) * 100) + 10; 
 
     for(let y=0; y<this.#map.length; y++) {
       for (let x=0; x<this.#map[y].length; x++) {
@@ -74,20 +73,20 @@ export class Game {
           }
           if (perlinValue > 40) {
             this.#grid[gradY][gradX] = perlinValue;
-          }
-
+          }      
+          
           if(perlinValue >= 20 && perlinValue <= 20.2) {
-            this.#env[gradY][gradX] = new Grass(gradX, gradY, 'light');
+            this.#env.push(new Grass(gradX, gradY, 'light'));
           }
           if(perlinValue <= -15 && perlinValue >= -15.4) {
-            this.#env[gradY][gradX] = new Grass(gradX, gradY);
+            this.#env.push(new Grass(gradX, gradY));
           }
           if(perlinValue >= 39 && perlinValue <= 39.05) {
-            this.#env[gradY][gradX] = new Rock(gradX, gradY);
+            this.#env.push(new Rock(gradX, gradY));
           }
           if(perlinValue >= 11 && perlinValue <= 11.05) {
             this.#grid[gradY][gradX] = 0;
-            this.#env[gradY][gradX] = new DeadTree(gradX, gradY);
+            this.#env.push(new DeadTree(gradX, gradY));
           }
           if(perlinValue >= 20 && perlinValue <= 20.05) {
             this.#grid[gradY][gradX] = 0;
@@ -95,13 +94,12 @@ export class Game {
           }
           if(perlinValue <= -13 && perlinValue >= -13.05) {
             this.#grid[gradY][gradX] = 0;
-            this.#env[gradY][gradX] = new Tree(gradX, gradY);
+            this.#env.push(new Tree(gradX, gradY));
           }
           if(perlinValue <= -14 && perlinValue >= -14.05) {
             this.#grid[gradY][gradX] = 0;
-            this.#env[gradY][gradX] = new Pine(gradX, gradY);
+            this.#env.push(new Pine(gradX, gradY));
           }
-          
         }
       }
     }
@@ -148,12 +146,12 @@ export class Game {
    * @param {MouseEvent} e 
    */
   handleClickEvent(e) {
-    const [allied, enemies] = this.#entities.reduce(([a, e], cur) => cur.type === 'ally' ? [[...a, cur], e] : [a, [...e, cur]], [[],[]]);
+    const allied = this.#entities.filter((entity) => entity.type === 'ally');
     const targets = this.#findTargetRegion(this.mouseX, this.mouseY, allied.length, this.#grid);
     
     for (const entity of allied) {
       const [x, y] = targets.shift();
-      entity.move(x, y, enemies);
+      entity.move(x, y);
     }
   }
 
@@ -212,14 +210,9 @@ export class Game {
   }
 
   #drawEnvironment(ctx) {
-    const gridHeight = this.#env.length;
-    const gridWidth = this.#env[0].length;
-    for (let y=0; y<gridHeight; y++) {
-      for (let x=0; x<gridWidth; x++) {
-        if (this.#env[y][x]) {
-          this.#env[y][x].draw(ctx)
-        }
-      }
+    const len = this.#env.length;
+    for (let i=0; i<len; i++) {
+      this.#env[i].draw(ctx)
     }
   }
 

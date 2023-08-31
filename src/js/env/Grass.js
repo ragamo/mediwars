@@ -38,6 +38,7 @@ export class Grass extends Environment {
    */
   constructor(x, y, type) {
     super(x, y);
+    this.type = type;
 
     if (type === 'light') {
       this.colors[1] = '#9bbc54';
