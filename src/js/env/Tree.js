@@ -22,7 +22,7 @@ export class Tree extends Environment {
 
   colors = {
     0: 'rgba(0,0,0,0)',
-    1: '#171717',
+    1: '#515151',
     2: '#d3a061',
     3: '#1a8425',
     4: '#239e1f',

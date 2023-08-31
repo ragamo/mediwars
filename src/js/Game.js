@@ -7,6 +7,8 @@ import { Tree } from './env/Tree';
 import { Pine } from './env/Pine';
 import { Grass } from './env/Grass';
 import { Rock } from './env/Rock';
+import { DeadTree } from './env/DeadTree';
+import { Bush } from './env/Bush';
 
 export class Game {
   #entities = [];
@@ -80,6 +82,17 @@ export class Game {
           if(perlinValue <= -15 && perlinValue >= -15.4) {
             this.#env[gradY][gradX] = new Grass(gradX, gradY);
           }
+          if(perlinValue >= 39 && perlinValue <= 39.05) {
+            this.#env[gradY][gradX] = new Rock(gradX, gradY);
+          }
+          if(perlinValue >= 11 && perlinValue <= 11.05) {
+            this.#grid[gradY][gradX] = 0;
+            this.#env[gradY][gradX] = new DeadTree(gradX, gradY);
+          }
+          if(perlinValue >= 20 && perlinValue <= 20.05) {
+            this.#grid[gradY][gradX] = 0;
+            this.#env[gradY][gradX] = new Bush(gradX, gradY);
+          }
           if(perlinValue <= -13 && perlinValue >= -13.05) {
             this.#grid[gradY][gradX] = 0;
             this.#env[gradY][gradX] = new Tree(gradX, gradY);
@@ -88,9 +101,7 @@ export class Game {
             this.#grid[gradY][gradX] = 0;
             this.#env[gradY][gradX] = new Pine(gradX, gradY);
           }
-          if(perlinValue >= 39 && perlinValue <= 39.05) {
-            this.#env[gradY][gradX] = new Rock(gradX, gradY);
-          }
+          
         }
       }
     }
