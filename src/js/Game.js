@@ -4,6 +4,9 @@ import { Graph } from "./lib/AStar";
 import { createCanvasContext } from './lib/Canvas';
 import { Unit } from './Unit';
 import { Tree } from './env/Tree';
+import { Pine } from './env/Pine';
+import { Grass } from './env/Grass';
+import { Rock } from './env/Rock';
 
 export class Game {
   #entities = [];
@@ -47,7 +50,6 @@ export class Game {
     canvas.addEventListener('click', this.handleClickEvent.bind(this));
     canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
     window.addEventListener('resize', resize);
-    console.log(this);
   }
 
   #prepareMap(width, height) {
@@ -68,12 +70,26 @@ export class Game {
           if (perlinValue < -40) {
             this.#grid[gradY][gradX] = 0;
           }
-          if(perlinValue <= -15 && perlinValue >= -15.02) {
+          if (perlinValue > 40) {
+            this.#grid[gradY][gradX] = perlinValue;
+          }
+
+          if(perlinValue >= 20 && perlinValue <= 20.2) {
+            this.#env[gradY][gradX] = new Grass(gradX, gradY, 'light');
+          }
+          if(perlinValue <= -15 && perlinValue >= -15.4) {
+            this.#env[gradY][gradX] = new Grass(gradX, gradY);
+          }
+          if(perlinValue <= -13 && perlinValue >= -13.05) {
             this.#grid[gradY][gradX] = 0;
             this.#env[gradY][gradX] = new Tree(gradX, gradY);
           }
-          if (perlinValue > 40) {
-            this.#grid[gradY][gradX] = perlinValue;
+          if(perlinValue <= -14 && perlinValue >= -14.05) {
+            this.#grid[gradY][gradX] = 0;
+            this.#env[gradY][gradX] = new Pine(gradX, gradY);
+          }
+          if(perlinValue >= 39 && perlinValue <= 39.05) {
+            this.#env[gradY][gradX] = new Rock(gradX, gradY);
           }
         }
       }
@@ -148,7 +164,7 @@ export class Game {
     this.renderer.clearRect(0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight);
     this.renderer.drawImage(this.#worldCanvas, 0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight);
     this.renderer.drawImage(this.#envCanvas, 0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight);
-    this.#drawCollisions(this.renderer);
+    // this.#drawCollisions(this.renderer);
     for(const entity of this.#entities) {
       if (entity.step) entity.step(timestamp);
       if (entity.draw) entity.draw(this.renderer);
@@ -190,7 +206,6 @@ export class Game {
     for (let y=0; y<gridHeight; y++) {
       for (let x=0; x<gridWidth; x++) {
         if (this.#env[y][x]) {
-          console.log(this.#env[y][x]);
           this.#env[y][x].draw(ctx)
         }
       }
