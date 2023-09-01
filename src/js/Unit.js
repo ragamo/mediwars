@@ -63,7 +63,7 @@ export class Unit {
         this.#path.shift();
       }
       if (this.#stepCount >= this.#shiftEvery) {
-        this.#stepCount = 1;
+        this.#stepCount = 0;
       }
 
       return;

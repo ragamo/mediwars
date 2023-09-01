@@ -1,5 +1,5 @@
 import { TILE_WIDTH, SPRITE_WIDTH, DEBUG } from './constants';
-import { perlin2 } from "./lib/Perlin";
+import { seed, perlin2 } from "./lib/Perlin";
 import { Graph } from "./lib/AStar";
 import { createCanvasContext } from './lib/Canvas';
 import { Unit } from './Unit';
@@ -25,6 +25,9 @@ export class Game {
    * @param {number} gridSize
    */
   constructor(canvas) {
+    // seed(parseInt(Math.random()*100+50, 10));
+    seed(100);
+
     // Canvas
     const resize = () => {
       const width = parseInt(window.innerWidth, 10);
@@ -75,10 +78,10 @@ export class Game {
             this.#grid[gradY][gradX] = perlinValue;
           }      
           
-          if(perlinValue >= 20 && perlinValue <= 20.2) {
+          if(perlinValue >= 20 && perlinValue <= 20.4) {
             this.#env.push(new Grass(gradX, gradY, 'light'));
           }
-          if(perlinValue <= -15 && perlinValue >= -15.4) {
+          if(perlinValue <= -15 && perlinValue >= -15.5) {
             this.#env.push(new Grass(gradX, gradY));
           }
           if(perlinValue >= 39 && perlinValue <= 39.05) {
@@ -90,15 +93,15 @@ export class Game {
           }
           if(perlinValue >= 20 && perlinValue <= 20.05) {
             this.#grid[gradY][gradX] = 0;
-            this.#env[gradY][gradX] = new Bush(gradX, gradY);
+            this.#env.push(new Bush(gradX, gradY));
           }
-          if(perlinValue <= -13 && perlinValue >= -13.05) {
-            this.#grid[gradY][gradX] = 0;
-            this.#env.push(new Tree(gradX, gradY));
-          }
-          if(perlinValue <= -14 && perlinValue >= -14.05) {
+          if((perlinValue <= -15 && perlinValue >= -15.05) || (perlinValue <= -33 && perlinValue >= -33.08)) {
             this.#grid[gradY][gradX] = 0;
             this.#env.push(new Pine(gradX, gradY));
+          }
+          if((perlinValue <= -24 && perlinValue >= -24.05) || (perlinValue >= 0 && perlinValue <= 0.08)) {
+            this.#grid[gradY][gradX] = 0;
+            this.#env.push(new Tree(gradX, gradY));
           }
         }
       }
