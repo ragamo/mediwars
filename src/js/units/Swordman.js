@@ -44,15 +44,17 @@ export class Swordman extends Unit {
     ],
   };
 
-  #colors = {
-    0: 'rgba(0,0,0,0)',
-    1: '#5e5c57',
-    2: '#f7d180',
-    3: '#b1b1b1',
-    4: '#171717',
-    5: this.type === 'ally' ? '#d3a061' : '#bc4e4e',
-    6: this.type === 'ally' ? '#99703b' : '#a43434',
-    7: '#f4f4f4',
+  get #colors() {
+    return {
+      0: 'rgba(0,0,0,0)',
+      1: '#5e5c57',
+      2: '#f7d180',
+      3: '#b1b1b1',
+      4: '#171717',
+      5: this.type === 'ally' ? '#d3a061' : '#bc4e4e',
+      6: this.type === 'ally' ? '#99703b' : '#a43434',
+      7: '#f4f4f4',
+    }
   }
 
   #step = 0;
@@ -81,5 +83,9 @@ export class Swordman extends Unit {
     }
 
     this.#cached[state] = canvas;    
+  }
+
+  clearCache() {
+    this.#cached = [];
   }
 }

@@ -3,22 +3,23 @@ import { astar } from "./lib/AStar";
 
 /**
  * @typedef { 'ally' | 'enemy' } UnitType
- * @typedef { 'idle' | 'fighting' } UnitState
  */
 
 export class Unit {
-  id = null;
   /** @type {UnitType} */
   type = null;
-  /** @type {UnitState} */
-  state = 'idle';
 
   #path = [];
   #stepCount = 0;
-  #shiftEvery = 8;
+  shiftEvery = 8;
 
   #patrol = [];
   #patrolIndex = 0;
+
+  opponent = undefined;
+  turn = undefined;
+  health = 5;
+  hold = false;
 
   /**
    * 
@@ -32,9 +33,9 @@ export class Unit {
     this.type = type;
   }
 
-  bind(graph, enemies) {
+  bind(graph, entities) {
     this.graph = graph;
-    this.enemies = enemies;
+    this.entities = entities;
   }
 
   move(x, y) {
@@ -49,20 +50,46 @@ export class Unit {
     // Collisions
     const enemyHit = this.collideWithEnemy(Math.round(this.x), Math.round(this.y));
     if (enemyHit) {
-      enemyHit.stop();
-      this.stop();
+      enemyHit.hold = true;
+      enemyHit.opponent = this;
+      this.hold = true;
+      this.opponent = enemyHit;
+    }
+
+    // Fight
+    if (this.opponent) {
+      const hit = Math.round(Math.random()*10) > 6
+      if (hit) {
+        this.opponent.health--;
+        if (this.opponent.health <= 0) {
+          this.opponent.opponent = undefined;
+          this.opponent.hold = false;
+          this.hold = false;
+
+          if (this.opponent.type === 'enemy' && Math.floor(Math.random()*10) > 5) {
+            this.opponent.stop();
+            this.opponent.shiftEvery = this.shiftEvery;
+            this.opponent.type = 'ally';
+            this.opponent.clearCache();
+          } else {
+            const index = this.entities.findIndex((e) => e === this.opponent);
+            this.entities.splice(index, 1);
+          }
+          this.opponent = undefined;
+        }
+      }
     }
 
     // Move
-    if (this.#path.length) {
-      this.x = this.x + ((this.#path[0].x - this.x) / this.#shiftEvery) * this.#stepCount;
-      this.y = this.y + ((this.#path[0].y - this.y) / this.#shiftEvery) * this.#stepCount;
+    if (this.#path.length && !this.hold) {
+      this.x = this.x + ((this.#path[0].x - this.x) / this.shiftEvery) * this.#stepCount;
+      this.y = this.y + ((this.#path[0].y - this.y) / this.shiftEvery) * this.#stepCount;
 
       this.#stepCount++;
-      if (this.#stepCount % this.#shiftEvery === 0) {
+      if (this.#stepCount % this.shiftEvery === 0) {
         this.#path.shift();
       }
-      if (this.#stepCount >= this.#shiftEvery) {
+      if (this.#stepCount >= this.shiftEvery) {
         this.#stepCount = 0;
       }
 
@@ -70,7 +97,7 @@ export class Unit {
     }
 
     // Patrol
-    if (this.#patrol.length) {
+    if (this.#patrol.length && !this.hold) {
       const [x, y] = this.#patrol[this.#patrolIndex];
       this.move(x, y);
       this.#patrolIndex++;
@@ -91,7 +118,7 @@ export class Unit {
   }
 
   patrol(...positions) {
-    this.#shiftEvery = 16;
+    this.shiftEvery = 16;
     this.#patrol = [[this.x, this.y], ...positions];
   }
   
@@ -104,15 +131,17 @@ export class Unit {
   }
 
   collideWithEnemy(x, y) {
-    return this.enemies.find((enemy) => {
+    return this.entities.find((enemy) => {
       const enemyX = Math.round(enemy.x);
       const enemyY = Math.round(enemy.y)
-      return this.type !== enemy.type && (
-        (x + 1 === enemyX && y === enemyY) ||
-        (x - 1 === enemyX && y === enemyY) ||
-        (x === enemyX && y + 1 === enemyY) ||
-        (x === enemyX && y - 1 === enemyY)
-      );
+      return this.type !== enemy.type &&
+        (this.opponent === undefined && enemy.opponent === undefined) &&
+        (
+          (x + 1 === enemyX && y === enemyY) ||
+          (x - 1 === enemyX && y === enemyY) ||
+          (x === enemyX && y + 1 === enemyY) ||
+          (x === enemyX && y - 1 === enemyY)
+        );
     });
   }
 }
