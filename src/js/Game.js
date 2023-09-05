@@ -40,11 +40,10 @@ export class Game {
     canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
     canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
     canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
-    canvas.addEventListener('click', this.handleClickEvent.bind(this));
-
     canvas.addEventListener('touchstart', this.handleMouseDown.bind(this));
     canvas.addEventListener('touchmove', this.handleMouseMove.bind(this));
     canvas.addEventListener('touchend', this.handleMouseUp.bind(this));
+    canvas.addEventListener('click', this.handleClickEvent.bind(this));
   }
 
   resize() {
@@ -58,10 +57,11 @@ export class Game {
     const { context } = createCanvasContext(width, height, canvas);
     this.renderer = context;
 
-    this.#clipDelta[0] = this.#clipDelta[0] + this.#clipOffset;
-    this.#clipDelta[1] = this.#clipDelta[1] + this.#clipOffset;
+    if(Math.abs(this.#mapOffset[0]) > this.#clipDelta[0])
+      this.#clipDelta[0] = this.#clipDelta[0] + this.#clipOffset;
 
-    console.log('resized', this.#grid?.[0]?.length, this.#grid?.length);
+    if(Math.abs(this.#mapOffset[1]) > this.#clipDelta[1])
+      this.#clipDelta[1] = this.#clipDelta[1] + this.#clipOffset;
       
     this.#prepareMap(width + this.#clipDelta[0], height + this.#clipDelta[1]);      
 
@@ -105,10 +105,6 @@ export class Game {
     const x = e.pageX ? Math.floor(pageX / SPRITE_WIDTH) : Math.floor(pageX / SPRITE_WIDTH);
     const y = e.pageY ? Math.floor(pageY / SPRITE_WIDTH) : Math.floor(pageY / SPRITE_WIDTH);
 
-    // let [x, y] = [Math.floor(e.pageX / SPRITE_WIDTH), Math.floor(e.pageY / SPRITE_WIDTH)];
-    // if (x > this.#grid[0].length - 1) x = this.#grid[0].length - 1;
-    // if (y > this.#grid.length - 1) y = this.#grid.length - 1;
-
     this.mouseX = x;
     this.mouseY = y;
 
@@ -141,18 +137,39 @@ export class Game {
   }
 
   createMatrix(height, width, fill, matrix) {
-    const expandedMatrix =Array.from(Array(height), () => new Array(width).fill(fill));
-  
-    if (!matrix) 
+    if (!matrix) {
+      const expandedMatrix =Array.from(Array(height), () => new Array(width).fill(fill));
       return expandedMatrix;
+    }
 
-    for (let y=0; y<matrix.length; y++) {
-      for (let x=0; x<matrix[0].length; x++) {
-        expandedMatrix[y][x] = matrix[y][x];
+    const initY = matrix.length;
+    const diffY = height - initY;
+    
+    const initX = matrix[0].length;
+    const diffX = width - initX
+
+    for (let y=0; y<initY; y++) {
+      for (let x=initX; x<initX + diffX; x++) {
+        if (!matrix[y]) matrix[y] = [];
+        matrix[y][x] = fill;
+      }
+    }
+
+    for (let y=initY; y<initY + diffY; y++) {
+      for (let x=0; x<initX; x++) {
+        if (!matrix[y]) matrix[y] = [];
+        matrix[y][x] = fill;
+      }
+    }
+
+    for (let y=initY; y<initY + diffY; y++) {
+      for (let x=initX; x<initX + diffX; x++) {
+        if (!matrix[y]) matrix[y] = [];
+        matrix[y][x] = fill;
       }
     }
   
-    return expandedMatrix;
+    return matrix;
   }
 
   #prepareMap(width, height) {
@@ -246,7 +263,7 @@ export class Game {
     this.renderer.clearRect(0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight); 
     this.renderer.drawImage(this.#worldCanvas, -this.#mapOffset[0] * 2, -this.#mapOffset[1] * 2, 2 * this.renderer.canvas.clientWidth, 2 * this.renderer.canvas.clientHeight, 0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight);
     this.renderer.drawImage(this.#envCanvas, -this.#mapOffset[0] * 2, -this.#mapOffset[1] * 2, 2 * this.renderer.canvas.clientWidth, 2 * this.renderer.canvas.clientHeight, 0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight);
-    this.#drawCollisions(this.renderer);
+    // this.#drawCollisions(this.renderer);
     for(const entity of this.#entities) {
       if (entity.step) entity.step(timestamp);
       if (entity.draw) entity.draw(this.renderer, this.#mapOffset);
