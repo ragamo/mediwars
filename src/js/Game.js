@@ -44,7 +44,7 @@ export class Game {
 
     canvas.addEventListener('touchstart', this.handleMouseDown.bind(this));
     canvas.addEventListener('touchmove', this.handleMouseMove.bind(this));
-    canvas.addEventListener('touchend', this.handleMouseDown.bind(this));
+    canvas.addEventListener('touchend', this.handleMouseUp.bind(this));
   }
 
   resize() {
@@ -77,8 +77,10 @@ export class Game {
   }
 
   handleMouseDown(e) {
+    const pageX = e.pageX ?? e.changedTouches[0].pageX;
+    const pageY = e.pageY ?? e.changedTouches[0].pageY;
     this.#isDraging = true;
-    this.#mouseOffset = [e.pageX - this.#mapOffset[0], e.pageY - this.#mapOffset[1]];
+    this.#mouseOffset = [pageX - this.#mapOffset[0], pageY - this.#mapOffset[1]];
   }
 
   handleMouseUp() {
@@ -106,7 +108,7 @@ export class Game {
     // let [x, y] = [Math.floor(e.pageX / SPRITE_WIDTH), Math.floor(e.pageY / SPRITE_WIDTH)];
     // if (x > this.#grid[0].length - 1) x = this.#grid[0].length - 1;
     // if (y > this.#grid.length - 1) y = this.#grid.length - 1;
-    
+
     this.mouseX = x;
     this.mouseY = y;
 
@@ -118,7 +120,7 @@ export class Game {
     }
 
     if (DEBUG) {
-      document.getElementById('debug').innerHTML = `[${x},${y}] (${this.#grid[y][x]}, ${this.#map[y*4][x*4]})`;
+      document.getElementById('debug').innerHTML = `[${x},${y}] (${this.#grid?.[y]?.[x]}, ${this.#map?.[y*4]?.[x*4]})`;
     }
   }
 
