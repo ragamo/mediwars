@@ -32,13 +32,13 @@ export class Basic extends Unit {
    * Draw on game world
    * @param {CanvasRenderingContext2D} ctx 
    */
-  draw(ctx) {
+  draw(ctx, offset) {
     const len = this.#sprite.length;
     for (let y=0; y<len; y++) {
       for (let x=0; x<len; x++) {
         ctx.fillStyle = this.#colors[this.#sprite[y][x]];
         // ctx.fillRect(this.x * TILE_WIDTH + x * 2, this.y * TILE_WIDTH + y * 2, 2, 2);
-        ctx.fillRect(this.x * SPRITE_WIDTH + x, this.y * SPRITE_WIDTH + y, 1, 1);
+        ctx.fillRect(this.x * SPRITE_WIDTH + x + offset[0], this.y * SPRITE_WIDTH + y + offset[1], 1, 1);
       }
     }
   }

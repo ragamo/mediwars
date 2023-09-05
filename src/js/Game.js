@@ -102,11 +102,9 @@ export class Game {
   handleMouseMove(e) {
     const pageX = e.pageX ?? e.changedTouches[0].pageX;
     const pageY = e.pageY ?? e.changedTouches[0].pageY;
-    const x = e.pageX ? Math.floor(pageX / SPRITE_WIDTH) : Math.floor(pageX / SPRITE_WIDTH);
-    const y = e.pageY ? Math.floor(pageY / SPRITE_WIDTH) : Math.floor(pageY / SPRITE_WIDTH);
 
-    this.mouseX = x;
-    this.mouseY = y;
+    this.mouseX = Math.floor(pageX / SPRITE_WIDTH);
+    this.mouseY = Math.floor(pageY / SPRITE_WIDTH);
 
     if (this.#isDraging) {
       this.#isDragged = true;
@@ -116,7 +114,9 @@ export class Game {
     }
 
     if (DEBUG) {
-      document.getElementById('debug').innerHTML = `[${x},${y}] (${this.#grid?.[y]?.[x]}, ${this.#map?.[y*4]?.[x*4]})`;
+      const offsetX = Math.floor(Math.abs(this.#mapOffset[0]/SPRITE_WIDTH)) + this.mouseX;
+      const offsetY = Math.floor(Math.abs(this.#mapOffset[1]/SPRITE_WIDTH)) + this.mouseY;
+      document.getElementById('debug').innerHTML = `[${this.mouseX},${this.mouseY}] [${offsetX},${offsetY}] (${this.#grid?.[this.mouseY]?.[this.mouseX]}, ${this.#map?.[this.mouseY*4]?.[this.mouseX*4]})`;
     }
   }
 
@@ -128,7 +128,11 @@ export class Game {
     if (this.#isDragged) return;
 
     const allied = this.#entities.filter((entity) => entity.type === 'ally');
-    const targets = this.#findTargetRegion(this.mouseX, this.mouseY, allied.length, this.#grid);
+
+    const offsetX = Math.floor(Math.abs(this.#mapOffset[0]/SPRITE_WIDTH)) + this.mouseX;
+    const offsetY = Math.floor(Math.abs(this.#mapOffset[1]/SPRITE_WIDTH)) + this.mouseY;
+    console.log(offsetX, offsetY);
+    const targets = this.#findTargetRegion(offsetX, offsetY, allied.length, this.#grid);
     
     for (const entity of allied) {
       const [x, y] = targets.shift();
