@@ -12,12 +12,19 @@ import { Bush } from './env/Bush';
 
 export class Game {
   #entities = [];
-  #grid = [];
-  #map = [];
+  #grid = undefined;
+  #map = undefined;
   #env = [];
   #envCanvas = null;
   #worldCanvas = null;
   #graph = null;
+
+  #isDraging = false;
+  #isDragged = false;
+  #mapOffset = [0, 0];
+  #mouseOffset = [0, 0];
+  #clipOffset = 200;
+  #clipDelta = [200, 200];
 
   /**
    * Main game class
@@ -28,43 +35,134 @@ export class Game {
     // seed(parseInt(Math.random()*100+50, 10));
     seed(100);
 
-    // Canvas
-    const resize = () => {
-      const width = parseInt(window.innerWidth, 10);
-      const height = parseInt(window.innerHeight, 10);
-
-      canvas.style.width = width;
-      canvas.style.height = height;
-      canvas.style.cursor = 'crosshair';
-
-      const { context } = createCanvasContext(width, height, canvas);
-      this.renderer = context;
-      this.#prepareMap(width, height);      
-
-      // Draw cached world
-      const { canvas: worldCanvas, context: worldContext } = createCanvasContext(width, height);
-      this.#worldCanvas = worldCanvas;
-      this.#drawWorld(worldContext);
-
-
-      const { canvas: envCanvas, context: envContext } = createCanvasContext(width, height);
-      this.#envCanvas = envCanvas;
-      this.#drawEnvironment(envContext);
-    }
-    resize();
-    canvas.addEventListener('click', this.handleClickEvent.bind(this));
+    this.resize();
+    window.addEventListener('resize', this.resize.bind(this));
     canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
-    window.addEventListener('resize', resize);
+    canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
+    canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
+    canvas.addEventListener('click', this.handleClickEvent.bind(this));
+
+    canvas.addEventListener('touchstart', this.handleMouseDown.bind(this));
+    canvas.addEventListener('touchmove', this.handleMouseMove.bind(this));
+    canvas.addEventListener('touchend', this.handleMouseDown.bind(this));
+  }
+
+  resize() {
+    const width = parseInt(window.innerWidth, 10);
+    const height = parseInt(window.innerHeight, 10);
+
+    canvas.style.width = width;
+    canvas.style.height = height;
+    canvas.style.cursor = 'crosshair';
+
+    const { context } = createCanvasContext(width, height, canvas);
+    this.renderer = context;
+
+    this.#clipDelta[0] = this.#clipDelta[0] + this.#clipOffset;
+    this.#clipDelta[1] = this.#clipDelta[1] + this.#clipOffset;
+
+    console.log('resized', this.#grid?.[0]?.length, this.#grid?.length);
+      
+    this.#prepareMap(width + this.#clipDelta[0], height + this.#clipDelta[1]);      
+
+    // Draw cached world
+    const { canvas: worldCanvas, context: worldContext } = createCanvasContext(width + this.#clipDelta[0], height + this.#clipDelta[1]);
+    this.#worldCanvas = worldCanvas;
+    this.#drawWorld(worldContext);
+
+
+    const { canvas: envCanvas, context: envContext } = createCanvasContext(width + this.#clipDelta[0], height + this.#clipDelta[1]);
+    this.#envCanvas = envCanvas;
+    this.#drawEnvironment(envContext);
+  }
+
+  handleMouseDown(e) {
+    this.#isDraging = true;
+    this.#mouseOffset = [e.pageX - this.#mapOffset[0], e.pageY - this.#mapOffset[1]];
+  }
+
+  handleMouseUp() {
+    if (this.#isDraging) {
+      const t = setTimeout(() => {
+        this.#isDragged = false;
+        clearTimeout(t);
+      }, 10)
+    }
+    this.#isDraging = false;
+
+    if (Math.abs(this.#mapOffset[0]) > this.#clipDelta[0] || Math.abs(this.#mapOffset[1]) > this.#clipDelta[1]) this.resize();
+  }
+
+  /**
+   * Handle mouse move
+   * @param {MouseEvent | TouchEvent} e 
+   */
+  handleMouseMove(e) {
+    const pageX = e.pageX ?? e.changedTouches[0].pageX;
+    const pageY = e.pageY ?? e.changedTouches[0].pageY;
+    const x = e.pageX ? Math.floor(pageX / SPRITE_WIDTH) : Math.floor(pageX / SPRITE_WIDTH);
+    const y = e.pageY ? Math.floor(pageY / SPRITE_WIDTH) : Math.floor(pageY / SPRITE_WIDTH);
+
+    // let [x, y] = [Math.floor(e.pageX / SPRITE_WIDTH), Math.floor(e.pageY / SPRITE_WIDTH)];
+    // if (x > this.#grid[0].length - 1) x = this.#grid[0].length - 1;
+    // if (y > this.#grid.length - 1) y = this.#grid.length - 1;
+    
+    this.mouseX = x;
+    this.mouseY = y;
+
+    if (this.#isDraging) {
+      this.#isDragged = true;
+      this.#mapOffset = [pageX - this.#mouseOffset[0], pageY - this.#mouseOffset[1]]
+      if (this.#mapOffset[0] >= 0) this.#mapOffset[0] = 0;
+      if (this.#mapOffset[1] >= 0) this.#mapOffset[1] = 0;
+    }
+
+    if (DEBUG) {
+      document.getElementById('debug').innerHTML = `[${x},${y}] (${this.#grid[y][x]}, ${this.#map[y*4][x*4]})`;
+    }
+  }
+
+  /**
+   * Handle user click
+   * @param {MouseEvent} e 
+   */
+  handleClickEvent(e) {
+    if (this.#isDragged) return;
+
+    const allied = this.#entities.filter((entity) => entity.type === 'ally');
+    const targets = this.#findTargetRegion(this.mouseX, this.mouseY, allied.length, this.#grid);
+    
+    for (const entity of allied) {
+      const [x, y] = targets.shift();
+      entity.move(x, y);
+    }
+  }
+
+  createMatrix(height, width, fill, matrix) {
+    const expandedMatrix =Array.from(Array(height), () => new Array(width).fill(fill));
+  
+    if (!matrix) 
+      return expandedMatrix;
+
+    for (let y=0; y<matrix.length; y++) {
+      for (let x=0; x<matrix[0].length; x++) {
+        expandedMatrix[y][x] = matrix[y][x];
+      }
+    }
+  
+    return expandedMatrix;
   }
 
   #prepareMap(width, height) {
-    this.#grid = Array.from(Array(Math.floor(height / SPRITE_WIDTH)), () => new Array(Math.floor(width / SPRITE_WIDTH)).fill(1));
-    this.#map = Array.from(Array(Math.ceil(height / TILE_WIDTH)), () => new Array(Math.ceil(width / TILE_WIDTH)).fill(0));
+    this.#grid = this.createMatrix(Math.floor(height / SPRITE_WIDTH), Math.floor(width / SPRITE_WIDTH), 1, this.#grid);
+    this.#map = this.createMatrix(Math.ceil(height / TILE_WIDTH), Math.ceil(width / TILE_WIDTH), 0, this.#map);
 
     const getPerlinValue = (x, y) => (perlin2(x / 40, y / 40) * 100) + 10; 
+    this.#env = [];
 
     for(let y=0; y<this.#map.length; y++) {
       for (let x=0; x<this.#map[y].length; x++) {
+        // const perlinValue = getPerlinValue(x - this.#mapOffset[0], y - this.#mapOffset[1]);
         const perlinValue = getPerlinValue(x, y);
         this.#map[y][x] = perlinValue;
 
@@ -128,36 +226,6 @@ export class Game {
     }
   }
 
-  /**
-   * Handle mouse move
-   * @param {MouseEvent} e 
-   */
-  handleMouseMove(e) {
-    let [x, y] = [Math.floor(e.pageX / SPRITE_WIDTH), Math.floor(e.pageY / SPRITE_WIDTH)];
-    if (x > this.#grid[0].length - 1) x = this.#grid[0].length - 1;
-    if (y > this.#grid.length - 1) y = this.#grid.length - 1;
-    this.mouseX = x;
-    this.mouseY = y;
-
-    if (DEBUG) {
-      document.getElementById('debug').innerHTML = `[${x},${y}] (${this.#grid[y][x]}, ${this.#map[y*4][x*4]})`;
-    }
-  }
-
-  /**
-   * Handle user click
-   * @param {MouseEvent} e 
-   */
-  handleClickEvent(e) {
-    const allied = this.#entities.filter((entity) => entity.type === 'ally');
-    const targets = this.#findTargetRegion(this.mouseX, this.mouseY, allied.length, this.#grid);
-    
-    for (const entity of allied) {
-      const [x, y] = targets.shift();
-      entity.move(x, y);
-    }
-  }
-
   #drawCursor(x, y) {
     this.renderer.beginPath();
     this.renderer.ellipse(x * SPRITE_WIDTH + SPRITE_WIDTH / 2, y * SPRITE_WIDTH + SPRITE_WIDTH / 2, SPRITE_WIDTH / 2, SPRITE_WIDTH / 2, 0, 0, 2 * Math.PI);
@@ -173,13 +241,13 @@ export class Game {
    * @param {number} timestamp 
    */
   loop(timestamp) {
-    this.renderer.clearRect(0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight);
-    this.renderer.drawImage(this.#worldCanvas, 0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight);
-    this.renderer.drawImage(this.#envCanvas, 0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight);
-    // this.#drawCollisions(this.renderer);
+    this.renderer.clearRect(0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight); 
+    this.renderer.drawImage(this.#worldCanvas, -this.#mapOffset[0] * 2, -this.#mapOffset[1] * 2, 2 * this.renderer.canvas.clientWidth, 2 * this.renderer.canvas.clientHeight, 0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight);
+    this.renderer.drawImage(this.#envCanvas, -this.#mapOffset[0] * 2, -this.#mapOffset[1] * 2, 2 * this.renderer.canvas.clientWidth, 2 * this.renderer.canvas.clientHeight, 0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight);
+    this.#drawCollisions(this.renderer);
     for(const entity of this.#entities) {
       if (entity.step) entity.step(timestamp);
-      if (entity.draw) entity.draw(this.renderer);
+      if (entity.draw) entity.draw(this.renderer, this.#mapOffset);
     }
     this.#drawCursor(this.mouseX, this.mouseY);
     window.requestAnimationFrame(this.loop.bind(this));
@@ -228,7 +296,7 @@ export class Game {
     for (let y=0; y<this.#grid.length; y++) {
       for (let x=0; x<this.#grid[0].length; x++) {
         if (this.#grid[y][x] === 0) {
-          ctx.fillRect(x*SPRITE_WIDTH, y*SPRITE_WIDTH, SPRITE_WIDTH, SPRITE_WIDTH);
+          ctx.fillRect(this.#mapOffset[0]+x*SPRITE_WIDTH, this.#mapOffset[1]+y*SPRITE_WIDTH, SPRITE_WIDTH, SPRITE_WIDTH);
         }
       }
     }

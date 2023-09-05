@@ -63,13 +63,13 @@ export class Swordman extends Unit {
    * Draw on game world
    * @param {CanvasRenderingContext2D} ctx 
    */
-  draw(ctx) {
+  draw(ctx, offset) {
     this.#step++;
     const state = Math.floor(this.#step/40)%2;
     if (this.#step >= 80) this.#step = 0;
 
     if (this.#cached[state]) {
-      ctx.drawImage(this.#cached[state], 0, 0, SPRITE_WIDTH * 2, SPRITE_WIDTH * 2, this.x * SPRITE_WIDTH, this.y * SPRITE_WIDTH, SPRITE_WIDTH, SPRITE_WIDTH);
+      ctx.drawImage(this.#cached[state], 0, 0, SPRITE_WIDTH * 2, SPRITE_WIDTH * 2, this.x * SPRITE_WIDTH + offset[0], this.y * SPRITE_WIDTH + offset[1], SPRITE_WIDTH, SPRITE_WIDTH);
       return;
     }
     
