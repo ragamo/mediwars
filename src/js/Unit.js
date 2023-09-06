@@ -1,5 +1,6 @@
 import { SPRITE_WIDTH } from "./constants";
 import { astar } from "./lib/AStar";
+import { createCanvasContext } from './lib/Canvas';
 
 /**
  * @typedef { 'ally' | 'enemy' } UnitType
@@ -20,6 +21,11 @@ export class Unit {
   turn = undefined;
   health = 5;
   hold = false;
+
+  sprite = {};
+  colors = {};
+  #step = 0;
+  #cached = [];
 
   /**
    * 
@@ -66,11 +72,16 @@ export class Unit {
           this.opponent.hold = false;
           this.hold = false;
 
+          // Converts into an ally
           if (this.opponent.type === 'enemy' && Math.floor(Math.random()*10) > 5) {
             this.opponent.stop();
             this.opponent.shiftEvery = this.shiftEvery;
             this.opponent.type = 'ally';
-            this.opponent.clearCache();
+
+            if (this.opponent.clearCache) 
+              this.opponent.clearCache();
+
+          // Dead
           } else {
             const index = this.entities.findIndex((e) => e === this.opponent);
             this.entities.splice(index, 1);
@@ -108,15 +119,6 @@ export class Unit {
     }
   }
 
-  /**
-   * Draw unit
-   * @param {CanvasRenderingContext2D} ctx 
-   */
-  draw(ctx) {
-    ctx.fillStyle = '#FF0000';
-    ctx.fillRect(this.x * SPRITE_WIDTH, this.y * SPRITE_WIDTH, SPRITE_WIDTH, SPRITE_WIDTH);
-  }
-
   patrol(...positions) {
     this.shiftEvery = 16;
     this.#patrol = [[this.x, this.y], ...positions];
@@ -143,5 +145,40 @@ export class Unit {
           (x === enemyX && y - 1 === enemyY)
         );
     });
+  }
+  
+  /**
+   * Draw on game world
+   * @param {CanvasRenderingContext2D} ctx canvas context
+   * @param {number[]} offset camera offset
+   */
+  draw(ctx, offset) {
+    this.#step++;
+    const state = Math.floor(this.#step/40)%2;
+    if (this.#step >= 80) this.#step = 0;
+
+    if (this.#cached[state]) {
+      ctx.drawImage(this.#cached[state], 0, 0, SPRITE_WIDTH * 2, SPRITE_WIDTH * 2, this.x * SPRITE_WIDTH + offset[0], this.y * SPRITE_WIDTH + offset[1], SPRITE_WIDTH, SPRITE_WIDTH);
+      return;
+    }
+    
+    const { canvas, context } = createCanvasContext(SPRITE_WIDTH, SPRITE_WIDTH);
+    const len = this.sprite.idle[state].length;
+    for (let y=0; y<len; y++) {
+      for (let x=0; x<len; x++) {
+        context.fillStyle = this.colors[this.sprite.idle[state][y][x]];
+        context.fillRect(x, y, 1, 1);
+      }
+    }
+
+    this.#cached[state] = canvas;    
+  }
+
+  /**
+   * Repaint this sprite
+   * Usefull for an enemy converting into ally
+   */
+  clearCache() {
+    this.#cached = [];
   }
 }

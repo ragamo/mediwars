@@ -1,5 +1,5 @@
 import { Game } from "./Game";
-import { Basic } from "./units/Basic";
+import { King } from "./units/King";
 import { Swordman } from "./units/Swordman";
 
 const game = new Game(document.getElementById('canvas'));
@@ -25,7 +25,7 @@ game.addObstacle(39, 44);
 game.addObstacle(39, 45);
 */
 
-const basic = new Basic(5, 5);
+const basic = new King(5, 3);
 game.add(basic);
 
 const patrol = new Swordman(3, 10, 'enemy');

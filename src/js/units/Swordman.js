@@ -1,9 +1,7 @@
 import { Unit } from "../Unit";
-import { SPRITE_WIDTH } from "../constants";
-import { createCanvasContext } from '../lib/Canvas';
 
 export class Swordman extends Unit {
-  #sprite = {
+  sprite = {
     idle: [
       [
         [0, 0, 0, 0, 0, 0, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0],
@@ -44,7 +42,7 @@ export class Swordman extends Unit {
     ],
   };
 
-  get #colors() {
+  get colors() {
     return {
       0: 'rgba(0,0,0,0)',
       1: '#5e5c57',
@@ -55,37 +53,5 @@ export class Swordman extends Unit {
       6: this.type === 'ally' ? '#99703b' : '#a43434',
       7: '#f4f4f4',
     }
-  }
-
-  #step = 0;
-  #cached = [];
-  /**
-   * Draw on game world
-   * @param {CanvasRenderingContext2D} ctx 
-   */
-  draw(ctx, offset) {
-    this.#step++;
-    const state = Math.floor(this.#step/40)%2;
-    if (this.#step >= 80) this.#step = 0;
-
-    if (this.#cached[state]) {
-      ctx.drawImage(this.#cached[state], 0, 0, SPRITE_WIDTH * 2, SPRITE_WIDTH * 2, this.x * SPRITE_WIDTH + offset[0], this.y * SPRITE_WIDTH + offset[1], SPRITE_WIDTH, SPRITE_WIDTH);
-      return;
-    }
-    
-    const { canvas, context } = createCanvasContext(SPRITE_WIDTH, SPRITE_WIDTH);
-    const len = this.#sprite.idle[state].length;
-    for (let y=0; y<len; y++) {
-      for (let x=0; x<len; x++) {
-        context.fillStyle = this.#colors[this.#sprite.idle[state][y][x]];
-        context.fillRect(x, y, 1, 1);
-      }
-    }
-
-    this.#cached[state] = canvas;    
-  }
-
-  clearCache() {
-    this.#cached = [];
   }
 }
