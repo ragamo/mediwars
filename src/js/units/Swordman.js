@@ -42,9 +42,8 @@ export class Swordman extends Unit {
     ],
   };
 
-  constructor(x, y, type) {
-    super(x, y, type);
-    this.colors = {
+  get colors() {
+    return {
       0: 'rgba(0,0,0,0)',
       1: '#5e5c57',
       2: '#f7d180',

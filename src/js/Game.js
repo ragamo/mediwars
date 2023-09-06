@@ -229,7 +229,6 @@ export class Game {
     }
 
     this.#graph = new Graph(this.#grid, { diagonal: false });
-    
     for(const entity of this.#entities) 
       entity.bind(this.#graph, this.#entities);
   }

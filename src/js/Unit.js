@@ -23,9 +23,9 @@ export class Unit {
   hold = false;
 
   sprite = {};
-  colors = {};
   #step = 0;
   #cached = [];
+  get colors() {};
 
   /**
    * 
