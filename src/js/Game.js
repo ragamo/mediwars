@@ -23,8 +23,8 @@ export class Game {
   #isDragged = false;
   #mapOffset = [0, 0];
   #mouseOffset = [0, 0];
-  #clipOffset = 200;
-  #clipDelta = [200, 200];
+  #clipOffset = 400;
+  #clipDelta = [400, 400];
 
   /**
    * Main game class
@@ -34,8 +34,6 @@ export class Game {
   constructor(canvas) {
     // seed(parseInt(Math.random()*100+50, 10));
     seed(100);
-
-    this.resize();
     window.addEventListener('resize', this.resize.bind(this));
     canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
     canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
@@ -44,6 +42,7 @@ export class Game {
     canvas.addEventListener('touchmove', this.handleMouseMove.bind(this));
     canvas.addEventListener('touchend', this.handleMouseUp.bind(this));
     canvas.addEventListener('click', this.handleClickEvent.bind(this));
+    this.resize();
   }
 
   resize() {
@@ -92,7 +91,8 @@ export class Game {
     }
     this.#isDraging = false;
 
-    if (Math.abs(this.#mapOffset[0]) > this.#clipDelta[0] || Math.abs(this.#mapOffset[1]) > this.#clipDelta[1]) this.resize();
+    if (Math.abs(this.#mapOffset[0]) > this.#clipDelta[0] || Math.abs(this.#mapOffset[1]) > this.#clipDelta[1])
+      this.resize();
   }
 
   /**
@@ -131,7 +131,7 @@ export class Game {
 
     const offsetX = Math.floor(Math.abs(this.#mapOffset[0]/SPRITE_WIDTH)) + this.mouseX;
     const offsetY = Math.floor(Math.abs(this.#mapOffset[1]/SPRITE_WIDTH)) + this.mouseY;
-    console.log(offsetX, offsetY);
+
     const targets = this.#findTargetRegion(offsetX, offsetY, allied.length, this.#grid);
     
     for (const entity of allied) {
@@ -229,6 +229,9 @@ export class Game {
     }
 
     this.#graph = new Graph(this.#grid, { diagonal: false });
+    
+    for(const entity of this.#entities) 
+      entity.bind(this.#graph, this.#entities);
   }
 
   get grid() {
