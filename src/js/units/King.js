@@ -42,16 +42,14 @@ export class King extends Unit {
     ],
   };
 
-  get colors() {
-    return {
-      0: 'rgba(0,0,0,0)',
-      1: '#b1b1b1',
-      2: '#f7d180',
-      3: '#574b77',
-      4: '#171717',
-      5: this.type === 'ally' ? '#f2cf3a' : '#bc4e4e',
-      6: this.type === 'ally' ? '#e2931d' : '#a43434',
-      7: '#f4f4f4',
-    }
-  }
+  colors = {
+    0: 'rgba(0,0,0,0)',
+    1: '#b1b1b1',
+    2: '#f7d180',
+    3: '#574b77',
+    4: '#171717',
+    5: '#f2cf3a',
+    6: '#e2931d',
+    7: '#f4f4f4',
+  };
 }
