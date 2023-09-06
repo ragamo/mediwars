@@ -84,10 +84,10 @@ export class Game {
 
   handleMouseUp() {
     if (this.#isDraging) {
-      const t = setTimeout(() => {
+      // const t = setTimeout(() => {
         this.#isDragged = false;
-        clearTimeout(t);
-      }, 10)
+        // clearTimeout(t);
+      // }, 1)
     }
     this.#isDraging = false;
 
