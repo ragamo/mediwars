@@ -9,14 +9,15 @@ import { Grass } from './env/Grass';
 import { Rock } from './env/Rock';
 import { DeadTree } from './env/DeadTree';
 import { Bush } from './env/Bush';
+import { Swordman } from './units/Swordman';
 
 export class Game {
   #entities = [];
   #grid = undefined;
   #map = undefined;
   #env = [];
-  #envCanvas = null;
-  #worldCanvas = null;
+  #envCanvas = undefined;
+  #worldCanvas = undefined;
   #graph = null;
 
   #isDraging = false;
@@ -65,12 +66,12 @@ export class Game {
     this.#prepareMap(width + this.#clipDelta[0], height + this.#clipDelta[1]);      
 
     // Draw cached world
-    const { canvas: worldCanvas, context: worldContext } = createCanvasContext(width + this.#clipDelta[0], height + this.#clipDelta[1]);
+    const { canvas: worldCanvas, context: worldContext } = createCanvasContext(width + this.#clipDelta[0], height + this.#clipDelta[1], this.#worldCanvas);
     this.#worldCanvas = worldCanvas;
     this.#drawWorld(worldContext);
 
 
-    const { canvas: envCanvas, context: envContext } = createCanvasContext(width + this.#clipDelta[0], height + this.#clipDelta[1]);
+    const { canvas: envCanvas, context: envContext } = createCanvasContext(width + this.#clipDelta[0], height + this.#clipDelta[1], this.#envCanvas);
     this.#envCanvas = envCanvas;
     this.#drawEnvironment(envContext);
   }
@@ -185,7 +186,6 @@ export class Game {
 
     for(let y=0; y<this.#map.length; y++) {
       for (let x=0; x<this.#map[y].length; x++) {
-        // const perlinValue = getPerlinValue(x - this.#mapOffset[0], y - this.#mapOffset[1]);
         const perlinValue = getPerlinValue(x, y);
         this.#map[y][x] = perlinValue;
 
@@ -224,6 +224,13 @@ export class Game {
             this.#grid[gradY][gradX] = 0;
             this.#env.push(new Tree(gradX, gradY));
           }
+
+          if (
+            (perlinValue >= 1 && perlinValue <= 1.002) ||
+            (perlinValue >= 1.1 && perlinValue <= 1.11)
+            ) {
+            this.#spawnEnemy(gradX, gradY);
+          }
         }
       }
     }
@@ -244,11 +251,22 @@ export class Game {
   add(entity) {
     if (entity instanceof Unit) {
       this.#entities.push(entity);
-      /* if (entity.type === 'enemy') {
-        this.#grid[entity.y][entity.x] = 0;
-      } */
       entity.bind(this.#graph, this.#entities);
     }
+  }
+
+  #spawnEnemy(x, y) {
+    const rand = () => Math.floor(Math.random() * 5);
+    const generate = (n, gridLen) => ((grad) => (grad >= gridLen) ? gridLen - 1 : grad )(rand() + n)
+
+    const gridLenX = this.#grid[0].length;
+    const gridLenY = this.#grid.length;
+    const paths = Array(rand() + 2).fill(null).map(() => [generate(x, gridLenX), generate(y, gridLenY)]);
+
+    const enemy = new Swordman(x, y, 'enemy');
+    enemy.patrol(...paths);
+
+    this.#entities.push(enemy);
   }
 
   #drawCursor(x, y) {
