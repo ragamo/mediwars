@@ -35,13 +35,14 @@ export class Game {
     // seed(parseInt(Math.random()*100+50, 10));
     seed(100);
     window.addEventListener('resize', this.resize.bind(this));
-    canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
     canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
+    canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
     canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
+    canvas.addEventListener('click', this.handleClickEvent.bind(this));
     canvas.addEventListener('touchstart', this.handleMouseDown.bind(this));
     canvas.addEventListener('touchmove', this.handleMouseMove.bind(this));
     canvas.addEventListener('touchend', this.handleMouseUp.bind(this));
-    canvas.addEventListener('click', this.handleClickEvent.bind(this));
+    canvas.addEventListener('touchend', this.handleClickEvent.bind(this));
     this.resize();
   }
 
