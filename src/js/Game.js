@@ -32,8 +32,8 @@ export class Game {
    * @param {number} gridSize
    */
   constructor(canvas) {
-    // seed(parseInt(Math.random()*100+50, 10));
-    seed(100);
+    seed(parseInt(Math.random()*100+50, 10));
+    // seed(100);
     window.addEventListener('resize', this.resize.bind(this));
     canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
     canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
