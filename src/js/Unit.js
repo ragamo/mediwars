@@ -120,7 +120,7 @@ export class Unit {
   }
 
   patrol(...positions) {
-    this.shiftEvery = 16;
+    this.shiftEvery = 12;
     this.#patrol = [[this.x, this.y], ...positions];
   }
   
