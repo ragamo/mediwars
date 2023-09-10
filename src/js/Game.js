@@ -38,11 +38,9 @@ export class Game {
     canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
     canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
     canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
-    canvas.addEventListener('click', this.handleClickEvent.bind(this));
     canvas.addEventListener('touchstart', this.handleMouseDown.bind(this));
     canvas.addEventListener('touchmove', this.handleMouseMove.bind(this));
     canvas.addEventListener('touchend', this.handleMouseUp.bind(this));
-    canvas.addEventListener('touchend', this.handleClickEvent.bind(this));
     this.resize();
   }
 
@@ -88,6 +86,8 @@ export class Game {
 
     if (Math.abs(this.#mapOffset[0]) > this.#clipDelta[0] || Math.abs(this.#mapOffset[1]) > this.#clipDelta[1])
       this.resize();
+
+    this.handleClickEvent();
   }
 
   /**
