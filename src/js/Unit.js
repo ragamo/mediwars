@@ -158,11 +158,12 @@ export class Unit {
     if (this.#step >= 80) this.#step = 0;
 
     if (this.#cached[state]) {
-      ctx.drawImage(this.#cached[state], 0, 0, SPRITE_WIDTH * 2, SPRITE_WIDTH * 2, this.x * SPRITE_WIDTH + offset[0], this.y * SPRITE_WIDTH + offset[1], SPRITE_WIDTH, SPRITE_WIDTH);
+      ctx.drawImage(this.#cached[state], 0, 0, SPRITE_WIDTH * 2, SPRITE_WIDTH * 2, this.x * 2 * SPRITE_WIDTH + 2 * offset[0], this.y * 2 * SPRITE_WIDTH + 2 * offset[1], SPRITE_WIDTH * 2, SPRITE_WIDTH * 2);
       return;
     }
     
     const { canvas, context } = createCanvasContext(SPRITE_WIDTH, SPRITE_WIDTH);
+    context.scale(2,2);
     const len = this.sprite.idle[state].length;
     for (let y=0; y<len; y++) {
       for (let x=0; x<len; x++) {

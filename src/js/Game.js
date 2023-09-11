@@ -287,7 +287,7 @@ export class Game {
 
   #drawCursor(x, y) {
     this.renderer.beginPath();
-    this.renderer.ellipse(x * SPRITE_WIDTH + SPRITE_WIDTH / 2, y * SPRITE_WIDTH + SPRITE_WIDTH / 2, SPRITE_WIDTH / 2, SPRITE_WIDTH / 2, 0, 0, 2 * Math.PI);
+    this.renderer.ellipse(x * SPRITE_WIDTH * 2 + SPRITE_WIDTH, y * SPRITE_WIDTH * 2 + SPRITE_WIDTH, SPRITE_WIDTH, SPRITE_WIDTH, 0, 0, 2 * Math.PI);
     this.renderer.fillStyle = 'rgba(255, 255, 255, .5)';
     this.renderer.fill();
     this.renderer.strokeStyle = 'rgba(0, 0, 0, .5)';
@@ -301,8 +301,8 @@ export class Game {
    */
   loop(timestamp) {
     this.renderer.clearRect(0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight); 
-    this.renderer.drawImage(this.#worldCanvas, -this.#mapOffset[0] * 2, -this.#mapOffset[1] * 2, 2 * this.renderer.canvas.clientWidth, 2 * this.renderer.canvas.clientHeight, 0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight);
-    this.renderer.drawImage(this.#envCanvas, -this.#mapOffset[0] * 2, -this.#mapOffset[1] * 2, 2 * this.renderer.canvas.clientWidth, 2 * this.renderer.canvas.clientHeight, 0, 0, this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight);
+    this.renderer.drawImage(this.#worldCanvas, -this.#mapOffset[0] , -this.#mapOffset[1] , this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight, 0, 0, 2 * this.renderer.canvas.clientWidth, 2 * this.renderer.canvas.clientHeight);
+    this.renderer.drawImage(this.#envCanvas, -this.#mapOffset[0], -this.#mapOffset[1], this.renderer.canvas.clientWidth, this.renderer.canvas.clientHeight, 0, 0, 2 * this.renderer.canvas.clientWidth, 2 * this.renderer.canvas.clientHeight);
     // this.#drawCollisions(this.renderer);
     for(const entity of this.#entities) {
       if (entity.step) entity.step(timestamp);
@@ -337,6 +337,8 @@ export class Game {
         ctx.fillRect(x*TILE_WIDTH, y*TILE_WIDTH, TILE_WIDTH, TILE_WIDTH);
       }
     }
+
+    ctx.filter = 'blur(10px)';
   }
 
   #drawEnvironment(ctx) {

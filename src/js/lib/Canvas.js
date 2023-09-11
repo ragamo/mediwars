@@ -9,7 +9,7 @@ export const createCanvasContext = (width, height, canvasElement) => {
   canvas.width = width * 2;
   canvas.height = height * 2;
   const context = canvas.getContext('2d');
-  context.scale(2,2);
+  // context.scale(2,2);
 
   return { canvas, context };
 };

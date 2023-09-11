@@ -40,6 +40,6 @@ export class Environment {
   }
 
   #drawCached(ctx) {
-    ctx.drawImage(envCache[this.#getCachedName()], 0, 0, SPRITE_WIDTH * 2, SPRITE_WIDTH * 2, this.x * SPRITE_WIDTH, this.y * SPRITE_WIDTH, SPRITE_WIDTH, SPRITE_WIDTH);
+    ctx.drawImage(envCache[this.#getCachedName()], 0, 0, SPRITE_WIDTH, SPRITE_WIDTH, this.x * SPRITE_WIDTH, this.y * SPRITE_WIDTH, SPRITE_WIDTH, SPRITE_WIDTH);
   }
 }
