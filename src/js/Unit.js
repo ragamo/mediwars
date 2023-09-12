@@ -17,9 +17,9 @@ export class Unit {
   #patrol = [];
   #patrolIndex = 0;
 
+  health = 5;
   opponent = undefined;
   turn = undefined;
-  health = 5;
   hold = false;
 
   sprite = {};
@@ -154,7 +154,7 @@ export class Unit {
    */
   draw(ctx, offset) {
     this.#step++;
-    const state = Math.floor(this.#step/40)%2;
+    const state = Math.floor(this.#step/40) % this.sprite.idle.length;
     if (this.#step >= 80) this.#step = 0;
 
     if (this.#cached[state]) {
