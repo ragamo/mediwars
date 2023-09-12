@@ -77,6 +77,8 @@ export class Game {
   handleMouseDown(e) {
     const pageX = e.pageX ?? e.changedTouches[0].pageX;
     const pageY = e.pageY ?? e.changedTouches[0].pageY;
+    this.mouseX = Math.floor(pageX / SPRITE_WIDTH);
+    this.mouseY = Math.floor(pageY / SPRITE_WIDTH);
     this.#isDraging = true;
     this.#mouseOffset = [pageX - this.#mapOffset[0], pageY - this.#mapOffset[1]];
   }
