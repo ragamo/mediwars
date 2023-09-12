@@ -1,8 +1,8 @@
-import { TILE_WIDTH, SPRITE_WIDTH, DEBUG } from './constants';
+import { TILE_WIDTH, SPRITE_WIDTH } from './constants';
 import { seed, perlin2 } from "./lib/Perlin";
 import { Graph } from "./lib/AStar";
 import { createCanvasContext } from './lib/Canvas';
-import { Unit } from './Unit';
+import { Unit } from './units/Unit';
 import { Tree } from './env/Tree';
 import { Pine } from './env/Pine';
 import { Grass } from './env/Grass';
@@ -107,11 +107,11 @@ export class Game {
       if (this.#mapOffset[1] >= 0) this.#mapOffset[1] = 0;
     }
 
-    if (DEBUG) {
+    /* if (DEBUG) {
       const offsetX = Math.floor(Math.abs(this.#mapOffset[0]/SPRITE_WIDTH)) + this.mouseX;
       const offsetY = Math.floor(Math.abs(this.#mapOffset[1]/SPRITE_WIDTH)) + this.mouseY;
       document.getElementById('debug').innerHTML = `[${this.mouseX},${this.mouseY}] [${offsetX},${offsetY}] (${this.#grid?.[this.mouseY]?.[this.mouseX]}, ${this.#map?.[this.mouseY*4]?.[this.mouseX*4]})`;
-    }
+    } */
   }
 
   /**
@@ -249,7 +249,7 @@ export class Game {
 
       if (
         (perlinValue >= 1 && perlinValue <= 1.002) ||
-        (perlinValue >= 1.1 && perlinValue <= 1.11)
+        (perlinValue >= 1.1 && perlinValue <= 1.12)
         ) {
         this.#spawnEnemy(gradX, gradY);
       }

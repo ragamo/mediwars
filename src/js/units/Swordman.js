@@ -1,6 +1,8 @@
-import { Unit } from "../Unit";
+import { Unit } from "./Unit";
 
 export class Swordman extends Unit {
+  name = 'Swordman';
+
   sprite = {
     idle: [
       [

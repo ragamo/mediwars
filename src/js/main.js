@@ -4,15 +4,11 @@ import { Swordman } from "./units/Swordman";
 
 const game = new Game(document.getElementById('canvas'));
 
-const basic = new King(5, 3);
+const basic = new King(3, 8);
 game.add(basic);
 
-const patrol = new Swordman(3, 10, 'enemy');
-patrol.patrol([3, 15], [15, 15], [15, 10]);
-game.add(patrol);
-
-for(let i=3; i<7; i++) {
-  for (let j=5; j<7; j++) {
+for(let i=5; i<7; i++) {
+  for (let j=6; j<11; j++) {
     const unit = new Swordman(i, j);
     game.add(unit);
   }

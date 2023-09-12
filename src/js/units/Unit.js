@@ -1,6 +1,6 @@
-import { SPRITE_WIDTH } from "./constants";
-import { astar } from "./lib/AStar";
-import { createCanvasContext } from './lib/Canvas';
+import { SPRITE_WIDTH } from "../constants";
+import { astar } from "../lib/AStar";
+import { createCanvasContext } from '../lib/Canvas';
 
 /**
  * @typedef { 'ally' | 'enemy' } UnitType
@@ -9,6 +9,7 @@ import { createCanvasContext } from './lib/Canvas';
 export class Unit {
   /** @type {UnitType} */
   type = null;
+  name = null;
 
   #path = [];
   #stepCount = 0;
@@ -86,6 +87,12 @@ export class Unit {
             const index = this.entities.findIndex((e) => e === this.opponent);
             this.entities.splice(index, 1);
           }
+          
+          if (this.opponent.name === 'King') {
+            document.getElementById('gameover').showModal();
+            return;
+          }
+
           this.opponent = undefined;
         }
       }
